@@ -1,6 +1,8 @@
 import React from 'react';
-import Leaderboard from './components/Leaderboard';
-import ArenaLogin from './LoginPage.jsx'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import Leaderboard from './Pages/Leaderboard';
+import ArenaLogin from './Pages/LoginPage.jsx'
+import 
 
 function App() {
   return (
