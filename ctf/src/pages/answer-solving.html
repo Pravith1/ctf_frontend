@@ -3,55 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTF Answer Solving</title>
+    <title>CTF Challenge</title>
     <link rel="stylesheet" href="answer-solving.css">
 </head>
 <body>
     <div class="container">
-        <div class="question-section">
-            <p class="question-text">
-                <span id="category-icon" style="color: #96ceb4;">
-                    🔐 <strong id="category-name">Cryptography</strong>
-                </span>
-                <br><br>
-                
-                <!-- Question content - can be anything -->
-                <div class="question-content">
-                    Decrypt the following message to find the flag: U2FsdGVkX1+vupppZksvRf5pq5g5XjFRlipRkwB0K1Y=
-                </div>
-                
-                <!-- Attachment/Link section - only shows if provided -->
-                <div id="attachment-section" class="optional-section" style="display: none;">
-                    <a href="#" target="_blank" rel="noopener noreferrer" class="action-link">
-                        📎 Download Attachment
-                    </a>
-                </div>
-                
-                <!-- External link - only shows if provided -->
-                <div id="link-section" class="optional-section" style="display: none;">
-                    <a href="#" target="_blank" rel="noopener noreferrer" class="action-link">
-                        🔗 External Link
-                    </a>
-                </div>
-                
-                <!-- Hint - only shows if provided -->
-                <div id="hint-section" class="optional-section" style="display: none;">
-                    <small class="hint-text">
-                        💡 Hint: The encryption method starts with "AES"
-                    </small>
-                </div>
-            </p>
+        <!-- Category Section - Top Left -->
+        <div class="category-section">
+            <div class="category-tag" id="category-tag">Cryptography</div>
+            <div class="category-line"></div>
         </div>
-        
-        <div class="input-section">
-            <input 
-                type="text" 
-                class="answer-input"
-                placeholder="flag{your_answer_here}"
-            />
-            <button class="submit-button">
-                🚀 Submit
-            </button>
+
+        <!-- Challenge Description - Questions below the line -->
+        <div class="description-section">
+            <!-- Main description/question content -->
+            <div class="challenge-description" id="challenge-description">
+                Challenge description or question content goes here.
+            </div>
+            
+            <!-- Optional attachment link -->
+            <div id="attachment-section" class="optional-section" style="display: none;">
+                <a href="#" target="_blank" rel="noopener noreferrer" class="challenge-link" id="attachment-link">
+                    📎 Download Attachment
+                </a>
+            </div>
+            
+            <!-- Optional external link -->
+            <div id="link-section" class="optional-section" style="display: none;">
+                <a href="#" target="_blank" rel="noopener noreferrer" class="challenge-link" id="external-link">
+                    🔗 External Link
+                </a>
+            </div>
+            
+            <!-- Optional hint -->
+            <div id="hint-section" class="optional-section" style="display: none;">
+                <div class="hint-text" id="hint-content">
+                    💡 Hint: This is a hint that can be provided by the question setter.
+                </div>
+            </div>
+        </div>
+
+        <!-- Flag Submission Section - Bottom -->
+        <div class="flag-section">
+            <div class="flag-input-container">
+                <label class="flag-label">Flag</label>
+                <input 
+                    type="text" 
+                    class="flag-input"
+                    id="flag-input"
+                    placeholder="flag{your_answer_here}"
+                />
+                <button class="submit-button" id="submit-button">Submit</button>
+            </div>
         </div>
     </div>
 
@@ -65,63 +68,72 @@
             'Miscellaneous': { icon: '🎯', color: '#feca57' }
         };
 
-        // Function to get URL parameters
-        function getUrlParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
+        // Dynamic content configuration
+        const challengeConfig = {
+            category: "Cryptography",
+            description: "Decrypt the following message to find the flag: U2FsdGVkX1+vupppZksvRf5pq5g5XjFRlipRkwB0K1Y=",
+            hasAttachment: false,
+            hasExternalLink: true,
+            hasHint: true,
+            attachmentUrl: "#",
+            externalLinkUrl: "#",
+            hintText: "The encryption method starts with 'AES'"
+        };
 
-        // Function to update the page based on URL parameters
-        function updatePage() {
-            // Get parameters from URL
-            const category = getUrlParameter('category') || 'Cryptography';
-            const question = getUrlParameter('question') || 'Decrypt the following message to find the flag: U2FsdGVkX1+vupppZksvRf5pq5g5XjFRlipRkwB0K1Y=';
-            const hint = getUrlParameter('hint') || '';
-            const link = getUrlParameter('link') || '';
-            const attachment = getUrlParameter('attachment') || '';
-
-            // Update category
-            const currentCategory = categoryInfo[category] || categoryInfo['Miscellaneous'];
-            document.getElementById('category-icon').innerHTML = `${currentCategory.icon} <strong>${category}</strong>`;
-            document.getElementById('category-icon').style.color = currentCategory.color;
-
-            // Update question content
-            document.querySelector('.question-content').textContent = question;
-
-            // Show/hide optional sections based on parameters
+        // Function to update the page with dynamic content
+        function updateChallenge() {
+            // Update category with icon and color
+            const currentCategory = categoryInfo[challengeConfig.category] || categoryInfo['Miscellaneous'];
+            document.getElementById('category-tag').innerHTML = `${currentCategory.icon} ${challengeConfig.category}`;
+            document.getElementById('category-tag').style.color = currentCategory.color;
+            
+            // Update description
+            document.getElementById('challenge-description').innerHTML = challengeConfig.description;
+            
+            // Show/hide optional sections
             const attachmentSection = document.getElementById('attachment-section');
             const linkSection = document.getElementById('link-section');
             const hintSection = document.getElementById('hint-section');
-
-            if (attachment) {
+            
+            if (challengeConfig.hasAttachment) {
                 attachmentSection.style.display = 'block';
-                attachmentSection.querySelector('a').href = attachment;
+                document.getElementById('attachment-link').href = challengeConfig.attachmentUrl;
             } else {
                 attachmentSection.style.display = 'none';
             }
-
-            if (link) {
+            
+            if (challengeConfig.hasExternalLink) {
                 linkSection.style.display = 'block';
-                linkSection.querySelector('a').href = link;
+                document.getElementById('external-link').href = challengeConfig.externalLinkUrl;
+                document.getElementById('external-link').textContent = 'link';
             } else {
                 linkSection.style.display = 'none';
             }
-
-            if (hint) {
+            
+            if (challengeConfig.hasHint) {
                 hintSection.style.display = 'block';
-                hintSection.querySelector('.hint-text').textContent = `💡 Hint: ${hint}`;
+                document.getElementById('hint-content').innerHTML = '💡 ' + challengeConfig.hintText;
             } else {
                 hintSection.style.display = 'none';
             }
         }
 
         // Initialize page when loaded
-        document.addEventListener('DOMContentLoaded', updatePage);
+        document.addEventListener('DOMContentLoaded', updateChallenge);
 
-        // Example usage - you can test with these URLs:
-        // ?category=Web%20exploitation&question=Find%20the%20vulnerability&hint=Try%20SQL%20injection
-        // ?category=OSINT&question=Investigate%20this%20target&link=https://example.com
-        // ?category=Reverse%20engineering&question=Analyze%20this%20binary&attachment=binary.exe
+        // Example: Function to load different challenges
+        function loadChallenge(config) {
+            Object.assign(challengeConfig, config);
+            updateChallenge();
+        }
+
+        // Example usage:
+        // loadChallenge({
+        //     category: "Web exploitation",
+        //     description: "Find the vulnerability in this web application.",
+        //     hasHint: true,
+        //     hintText: "Try SQL injection techniques"
+        // });
     </script>
 </body>
 </html>
