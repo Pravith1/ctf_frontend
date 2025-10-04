@@ -46,15 +46,15 @@
         <!-- Flag Submission Section - Bottom -->
         <div class="flag-section">
             <div class="flag-input-container">
-                <label class="flag-label">Flag</label>
+                <div class="flag-label">Flag</div>
                 <input 
                     type="text" 
                     class="flag-input"
                     id="flag-input"
                     placeholder="flag{your_answer_here}"
                 />
-                <button class="submit-button" id="submit-button">Submit</button>
             </div>
+            <button class="submit-button" id="submit-button">Submit</button>
         </div>
     </div>
 
@@ -82,10 +82,8 @@
 
         // Function to update the page with dynamic content
         function updateChallenge() {
-            // Update category with icon and color
-            const currentCategory = categoryInfo[challengeConfig.category] || categoryInfo['Miscellaneous'];
-            document.getElementById('category-tag').innerHTML = `${currentCategory.icon} ${challengeConfig.category}`;
-            document.getElementById('category-tag').style.color = currentCategory.color;
+            // Update category without icon
+            document.getElementById('category-tag').textContent = challengeConfig.category;
             
             // Update description
             document.getElementById('challenge-description').innerHTML = challengeConfig.description;
