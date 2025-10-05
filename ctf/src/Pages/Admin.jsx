@@ -7,9 +7,13 @@ function Admin() {
   const [activeMenu, setActiveMenu] = useState('View');
   
   return (
-    <div className="app-container">
-      <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
-      <MainContent activeMenu={activeMenu} />
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Header />
+      <div className="app-container" style={{ flex: 1 }}>
+        <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+        <MainContent activeMenu={activeMenu} />
+      </div>
+      <Footer />
     </div>
   );
 }
