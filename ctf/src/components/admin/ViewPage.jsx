@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function OverviewPage() {
+function ViewPage() {
   const dummyCategories = ['Web Exploitation', 'Cryptography', 'Reverse Engineering', 'Binary Exploitation', 'Forensics'];
 
   const dummyQuestions = {
@@ -15,7 +15,7 @@ function OverviewPage() {
 
   return (
     <div className="view-page">
-      <h1>Overview</h1>
+      <h1>View</h1>
 
       <div className="view-section">
         <h2>All Categories</h2>
@@ -54,4 +54,4 @@ function OverviewPage() {
   );
 }
 
-export default OverviewPage;
+export default ViewPage;

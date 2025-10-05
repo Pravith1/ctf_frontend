@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 function Sidebar({ activeMenu, setActiveMenu }) {
   const menuItems = ['Overview', 'Categories', 'Questions'];
-  
+
   return (
     <div className="sidebar">
       <h2 className="sidebar-title">CTF Manager</h2>
