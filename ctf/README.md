@@ -1,6 +1,42 @@
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Project pages and routing
+
+We use `react-router-dom` for multiple pages. The entry HTML is `index.html`, React mounts in `src/main.jsx`, and routes are defined in `src/App.jsx`.
+
+### Add a new page
+1. Create your page component under `src/pages/YourPage.jsx` (and optional CSS next to it).
+2. Export a default React component.
+3. Import it in `src/App.jsx` and add a `<Route>` for your path.
+
+Example:
+
+```jsx
+// src/pages/About.jsx
+export default function About() {
+  return <div>About</div>
+}
+```
+
+```jsx
+// in src/App.jsx
+import About from './pages/About.jsx'
+// ...
+<Routes>
+  <Route path="/about" element={<About />} />
+  {/* add your other routes */}
+  <Route path="/answer" element={<AnswerSolving />} />
+  <Route path="/" element={<Home />} />
+  <Route path="*" element={<NotFound />} />
+  {/* optional */}
+  
+```
+
+### Development
+- Run `npm run dev` and open the shown local URL.
+- Navigate to your page via its route, e.g. `/answer`.
+
 
 Currently, two official plugins are available:
 
