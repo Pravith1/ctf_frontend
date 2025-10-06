@@ -3,8 +3,8 @@ function Footer() {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>LeetCode Tracker</h3>
-          <p>Track your coding progress efficiently</p>
+          <h3>Cyber CTF</h3>
+          <p>Crack the Code, Top the Leaderboard</p>
         </div>
         <div className="footer-section">
           <h4>Quick Links</h4>
