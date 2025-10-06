@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function ArenaLogin() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     username: '',
@@ -17,20 +21,65 @@ export default function ArenaLogin() {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (isLogin) {
-      console.log('Login attempt:', formData);
+      // Login logic
+      if (formData.username && formData.password) {
+        const result = await login({
+          username: formData.username,
+          password: formData.password
+        });
+        
+        if (result.success) {
+          console.log('Login successful, redirecting to leaderboard...');
+          navigate('/leaderboard');
+        } else {
+          alert(result.message || 'Login failed');
+        }
+      } else {
+        alert('Please enter username and password');
+      }
     } else {
-      console.log('Register attempt:', formData);
+      // Register logic
+      if (formData.username && formData.email && formData.password && formData.confirmPassword) {
+        if (formData.password === formData.confirmPassword) {
+          const result = await login({
+            username: formData.username,
+            email: formData.email,
+            password: formData.password
+          });
+          
+          if (result.success) {
+            console.log('Registration successful, redirecting to leaderboard...');
+            navigate('/leaderboard');
+          } else {
+            alert(result.message || 'Registration failed');
+          }
+        } else {
+          alert('Passwords do not match');
+        }
+      } else {
+        alert('Please fill all fields');
+      }
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     console.log('Google login clicked');
+    // Simulate successful Google login
+    const result = await login({ username: 'google_user' });
+    if (result.success) {
+      navigate('/leaderboard');
+    }
   };
 
-  const handleMicrosoftLogin = () => {
+  const handleMicrosoftLogin = async () => {
     console.log('Microsoft login clicked');
+    // Simulate successful Microsoft login
+    const result = await login({ username: 'microsoft_user' });
+    if (result.success) {
+      navigate('/leaderboard');
+    }
   };
 
   const toggleMode = () => {
