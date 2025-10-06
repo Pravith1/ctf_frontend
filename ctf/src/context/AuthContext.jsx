@@ -26,15 +26,6 @@ export const AuthProvider = ({ children }) => {
   // Login function - will be called from LoginPage
   const login = async (credentials) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(credentials)
-      // });
-      // const data = await response.json();
-      
-      // DUMMY RESPONSE - simulating backend response
       const dummyResponse = {
         success: true,
         token: 'dummy-jwt-token-' + Date.now(),

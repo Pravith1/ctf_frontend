@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import CTFHeader from '../components/layout/CTFHeader';
 import { useAuth } from '../context/AuthContext';
 
+
 export default function AnswerSolving() {
   const { user } = useAuth();
   
   const [challengeConfig] = useState({
     title: "Basic Injection",
     points: 30,
-    difficulty: "Easy",
     category: "Web",
     categoryIcon: "🌐",
     description: "See if you can leak the whole database using what you know about SQL Injections.",
@@ -82,14 +82,13 @@ export default function AnswerSolving() {
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
-                background: '#10b981',
                 color: '#fff',
                 padding: '4px 12px',
                 borderRadius: '6px',
                 fontSize: '13px',
                 fontWeight: '600'
               }}>
-                {challengeConfig.difficulty}
+
               </div>
               <div style={{
                 color: '#fff',
@@ -99,7 +98,7 @@ export default function AnswerSolving() {
                 alignItems: 'center',
                 gap: '4px'
               }}>
-                ⏱️ {challengeConfig.points} points
+                 {challengeConfig.points} points
               </div>
             </div>
           </div>
@@ -252,14 +251,13 @@ export default function AnswerSolving() {
             background: '#2a2e35',
             borderRadius: '0',
             padding: '24px',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-            minHeight: '600px'
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)'
           }}>
             <h3 style={{ 
               color: '#fff', 
               fontSize: '18px', 
               fontWeight: '600',
-              marginBottom: '20px',
+              marginBottom: '16px',
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
@@ -267,28 +265,21 @@ export default function AnswerSolving() {
               Top10
             </h3>
             <div style={{ 
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px'
             }}>
               {top10.map((player) => (
                 <div key={player.rank} style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  gap: '8px',
                   color: '#d1d5db',
-                  fontSize: '15px',
-                  padding: '12px 16px',
-                  background: '#33383f',
-                  borderRadius: '6px',
-                  transition: 'all 0.2s'
+                  fontSize: '14px'
                 }}>
-                  <span style={{ 
-                    fontWeight: '700',
-                    color: '#667eea',
-                    minWidth: '24px'
-                  }}>{player.rank}</span>
-                  <span style={{ flex: 1 }}>{player.name}</span>
+                  <span style={{ fontWeight: '600' }}>{player.rank}</span>
+                  <span>{player.name}</span>
+                  <span style={{ marginLeft: 'auto', color: '#9ca3af' }}>⏱</span>
                 </div>
               ))}
             </div>
