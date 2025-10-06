@@ -1,0 +1,105 @@
+/* CTF Header Styles - Matching Leaderboard Theme */
+.ctf-header {
+  background-color: transparent;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  z-index: 1000;
+  display: flex;
+  flex-direction: row;
+  justify-content:space-around;
+  align-items: center;
+}
+
+.ctf-header-container {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 60px;
+}
+
+/* Brand/Logo */
+.ctf-brand {
+  flex-shrink: 0;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s;
+}
+
+.brand-link:hover {
+  opacity: 0.8;
+}
+
+.brand-icon {
+  font-size: 20px;
+}
+
+.brand-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Navigation */
+.ctf-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  color: #b0b0b0;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.nav-icon {
+  font-size: 16px;
+}
+
+/* Actions Section */
+.ctf-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.learn-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.learn-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
