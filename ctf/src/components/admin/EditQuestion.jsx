@@ -1,18 +1,18 @@
 import { useState } from 'react';
 
-function QuestionsPage() {
-  const [status, setStatus] = useState('');
-
+function EditQuestion({ category, question, onBack }) {
   const dummyCategories = ['Web Exploitation', 'Cryptography', 'Reverse Engineering', 'Binary Exploitation', 'Forensics'];
 
   const [formData, setFormData] = useState({
-    category: dummyCategories[0],
-    title: '',
-    link: '',
-    description: '',
-    answer: '',
-    points: ''
+    category: category,
+    title: question.title,
+    link: question.link,
+    description: question.description,
+    answer: question.answer,
+    points: question.points
   });
+
+  const [status, setStatus] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,18 +22,25 @@ function QuestionsPage() {
     }));
   };
 
-  const handleCreate = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Creating question:', formData);
-    setStatus('Question created successfully!');
-    setTimeout(() => setStatus(''), 3000);
+    console.log('Updating question:', formData);
+    setStatus('Question updated successfully!');
+    setTimeout(() => {
+      setStatus('');
+      onBack();
+    }, 2000);
   };
 
   return (
-    <div className="questions-page">
-      <h1>Questions</h1>
+    <div className="edit-question-page">
+      <button className="back-button" onClick={onBack}>
+        ← <span>Back to Overview</span>
+      </button>
 
-      <form className="form" onSubmit={handleCreate}>
+      <h1>Edit Question</h1>
+
+      <form className="form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="category">Category</label>
           <select
@@ -43,9 +50,9 @@ function QuestionsPage() {
             value={formData.category}
             onChange={handleInputChange}
           >
-            {dummyCategories.map((category, index) => (
-              <option key={index} value={category}>
-                {category}
+            {dummyCategories.map((cat, index) => (
+              <option key={index} value={cat}>
+                {cat}
               </option>
             ))}
           </select>
@@ -61,6 +68,7 @@ function QuestionsPage() {
             value={formData.title}
             onChange={handleInputChange}
             placeholder="Enter question title"
+            required
           />
         </div>
 
@@ -74,6 +82,7 @@ function QuestionsPage() {
             value={formData.link}
             onChange={handleInputChange}
             placeholder="Enter link"
+            required
           />
         </div>
 
@@ -87,6 +96,7 @@ function QuestionsPage() {
             onChange={handleInputChange}
             placeholder="Enter question description"
             rows="4"
+            required
           />
         </div>
 
@@ -100,6 +110,7 @@ function QuestionsPage() {
             value={formData.answer}
             onChange={handleInputChange}
             placeholder="Enter answer"
+            required
           />
         </div>
 
@@ -113,11 +124,12 @@ function QuestionsPage() {
             value={formData.points}
             onChange={handleInputChange}
             placeholder="Enter points"
+            required
           />
         </div>
 
         <button type="submit" className="btn-primary">
-          Create
+          Update Question
         </button>
       </form>
 
@@ -130,4 +142,4 @@ function QuestionsPage() {
   );
 }
 
-export default QuestionsPage;
+export default EditQuestion;

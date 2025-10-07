@@ -3,7 +3,7 @@ function Header() {
     <header className="header">
       <div className="header-content">
         <div className="header-logo">
-          <h1>LeetCode Tracker</h1>
+          <h1>Cyber CTF</h1>
         </div>
         <nav className="header-nav">
           <a href="#" className="nav-link">Home</a>
