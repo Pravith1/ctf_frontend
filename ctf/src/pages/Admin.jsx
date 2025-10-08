@@ -4,7 +4,7 @@ import Footer from '../components/layout/Footer';
 import Sidebar from '../components/admin/Sidebar';
 import MainContent from '../components/admin/MainContent';
 import '../App.css';
-import { getCategoriesAdmin, getQuestionsAdmin } from '../api';
+import { getCategoriesAdmin, getQuestionsAdmin } from '../api.js';
 import { useNavigate } from 'react-router-dom';
 
 function Admin() {

@@ -6,7 +6,7 @@ import {
 	deleteQuestionAdmin,
 	updateCategoryAdmin,
 	updateQuestionAdmin
-} from '../api';
+} from '../../api';
 import EditCategory from './EditCategory';
 import EditQuestion from './EditQuestion';
 

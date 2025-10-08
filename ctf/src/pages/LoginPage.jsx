@@ -109,8 +109,6 @@ export default function ArenaLogin() {
           padding: 20px;
           position: relative;
           overflow: hidden;
-        //   background: linear-gradient(135deg, #00274d 0%, #003d73 50%, #00274d
-        //   100%);
           background: rgb(0,0,0);
         }
 

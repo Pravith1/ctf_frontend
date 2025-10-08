@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { updateQuestionAdmin, getCategoriesAdmin } from '../api';
+import { updateQuestionAdmin, getCategoriesAdmin } from '../../api.js';
 
 function EditQuestion({ category, question, onBack }) {
   const [categories, setCategories] = useState([]);

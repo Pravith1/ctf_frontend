@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCategoriesAdmin, createQuestionAdmin } from '../api';
+import { getCategoriesAdmin, createQuestionAdmin } from '../../api.js';
 
 function QuestionsPage() {
 	const [categories, setCategories] = useState([]);

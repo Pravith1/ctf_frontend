@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { updateCategoryAdmin } from '../api';
+import { updateCategoryAdmin } from '../../api.js';
 
 function EditCategory({ category, onBack }) {
   const [categoryName, setCategoryName] = useState(category.name);
