@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import CTFHeader from '../components/layout/CTFHeader';
 import { useAuth } from '../context/AuthContext';
 
 
 export default function AnswerSolving() {
   const { user } = useAuth();
+  const location = useLocation();
+  const { id } = useParams();
   
-  const [challengeConfig] = useState({
+  // Get challenge data from navigation state or use default
+  const passedChallenge = location.state?.challenge;
+  
+  const defaultChallenge = {
+    id: parseInt(id) || 2,
     title: "Basic Injection",
     points: 30,
+    difficulty: "Easy",
     category: "Web",
     categoryIcon: "🌐",
     description: "See if you can leak the whole database using what you know about SQL Injections.",
@@ -19,8 +27,9 @@ export default function AnswerSolving() {
     additionalLinkUrl: "#",
     solves: 64744,
     tags: ["Web", "intelgent"]
-  });
+  };
 
+  const [challengeConfig] = useState(passedChallenge || defaultChallenge);
   const [flagInput, setFlagInput] = useState('CTFlearn{h4cK3d}');
   
   // Mock top 10 players
@@ -82,13 +91,14 @@ export default function AnswerSolving() {
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
+                background: '#10b981',
                 color: '#fff',
                 padding: '4px 12px',
                 borderRadius: '6px',
                 fontSize: '13px',
                 fontWeight: '600'
               }}>
-
+                {challengeConfig.difficulty}
               </div>
               <div style={{
                 color: '#fff',
@@ -98,7 +108,7 @@ export default function AnswerSolving() {
                 alignItems: 'center',
                 gap: '4px'
               }}>
-                 {challengeConfig.points} points
+                ⏱️ {challengeConfig.points} points
               </div>
             </div>
           </div>

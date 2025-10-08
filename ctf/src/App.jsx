@@ -1,10 +1,11 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './App.css'
-import Leaderboard from './Pages/Leaderboard.jsx';
-import ArenaLogin from './Pages/LoginPage.jsx'
-import Admin from './Pages/Admin.jsx'
-import AnswerSolving from './Pages/AnswerSolving.jsx'
+import Leaderboard from './pages/Leaderboard.jsx';
+import ArenaLogin from './pages/LoginPage.jsx'
+import Admin from './pages/Admin.jsx'
+import AnswerSolving from './pages/AnswerSolving.jsx'
+import ChallengesPage from './pages/Challenge.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 function App() {
@@ -21,6 +22,14 @@ function App() {
       />
       <Route 
         path="/challenge" 
+        element={
+          <ProtectedRoute>
+            <ChallengesPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/challenge/:id" 
         element={
           <ProtectedRoute>
             <AnswerSolving />
