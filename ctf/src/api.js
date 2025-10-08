@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Read backend url from Vite env (VITE_BACKEND_URL) or fallback to plain BACKEND_URL or localhost
+// Use hosted backend URL or fallback to Vite env or localhost
 const BASE_URL =
+  'https://ctf-backend-1.onrender.com' || // Hosted backend
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL) ||
   process.env.BACKEND_URL ||
   'http://localhost:5000';
@@ -14,24 +15,22 @@ const api = axios.create({
   }
 });
 
-// Optional: central response handler
+// Central response handler (optional)
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    // You can add global error handling here (401 -> redirect to login etc.)
+    // Global error handling example: 401 -> redirect to login
     return Promise.reject(err);
   }
 );
 
 // Auth endpoints
 export const signup = async (payload) => {
-  // payload: { email, team_name, password, year }
   const res = await api.post('/auth/signup', payload);
   return res.data;
 };
 
 export const login = async (payload) => {
-  // payload: { team_name, password } or { email, password } depending on backend
   const res = await api.post('/auth/login', payload);
   return res.data;
 };
@@ -41,7 +40,7 @@ export const logout = async () => {
   return res.data;
 };
 
-// Leaderboard REST (real-time handled in separate file)
+// Leaderboard endpoints
 export const fetchLeaderboard = async () => {
   const res = await api.get('/leaderboard');
   return res.data;
@@ -59,7 +58,6 @@ export const fetchSubmissionCategories = async () => {
 };
 
 export const fetchQuestionsByCategory = async (categoryId) => {
-  // Note: backend expects categoryId in body
   const res = await api.post('/submission/questions', { categoryId });
   return res.data;
 };
