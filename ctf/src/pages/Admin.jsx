@@ -17,48 +17,47 @@ function Admin() {
 	const scrollPositionRef = useRef(0);
 	const navigate = useNavigate();
 
-	// Check if admin is authenticated
+	// Redirect if not admin
 	useEffect(() => {
 		const user = JSON.parse(localStorage.getItem('user'));
 		if (!user || !user.isAdmin) {
-			navigate('/login'); // redirect if not admin
+			navigate('/login'); 
 		}
 	}, [navigate]);
 
-	// Fetch categories and questions from backend
+	// Fetch categories and questions
+	const fetchData = async () => {
+		try {
+			setLoading(true);
+			const [cats, ques] = await Promise.all([
+				getCategoriesAdmin(),
+				getQuestionsAdmin()
+			]);
+			setCategories(cats);
+			setQuestions(ques);
+		} catch (err) {
+			console.error('Failed to load admin data:', err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				setLoading(true);
-				const [cats, ques] = await Promise.all([
-					getCategoriesAdmin(),
-					getQuestionsAdmin()
-				]);
-				setCategories(cats);
-				setQuestions(ques);
-			} catch (err) {
-				console.error('Failed to load admin data:', err);
-			} finally {
-				setLoading(false);
-			}
-		};
 		fetchData();
 	}, []);
 
 	const handleEditCategory = (category) => {
 		const mainContent = document.querySelector('.main-content');
-		if (mainContent) {
-			scrollPositionRef.current = mainContent.scrollTop;
-		}
+		if (mainContent) scrollPositionRef.current = mainContent.scrollTop;
 		setEditingCategory(category);
+		setActiveMenu('Categories'); // Ensure content matches sidebar
 	};
 
 	const handleEditQuestion = (category, question) => {
 		const mainContent = document.querySelector('.main-content');
-		if (mainContent) {
-			scrollPositionRef.current = mainContent.scrollTop;
-		}
+		if (mainContent) scrollPositionRef.current = mainContent.scrollTop;
 		setEditingQuestion({ category, question });
+		setActiveMenu('Questions'); // Ensure content matches sidebar
 	};
 
 	const handleBackToOverview = () => {
@@ -66,16 +65,14 @@ function Admin() {
 		setEditingQuestion(null);
 		setTimeout(() => {
 			const mainContent = document.querySelector('.main-content');
-			if (mainContent) {
-				mainContent.scrollTop = scrollPositionRef.current;
-			}
+			if (mainContent) mainContent.scrollTop = scrollPositionRef.current;
 		}, 0);
 	};
 
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 			<Header />
-			<div className="app-container" style={{ flex: 1 }}>
+			<div className="app-container" style={{ flex: 1, display: 'flex' }}>
 				<Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
 				<MainContent
 					activeMenu={activeMenu}
@@ -87,18 +84,7 @@ function Admin() {
 					categories={categories}
 					questions={questions}
 					loading={loading}
-					refreshData={async () => {
-						try {
-							const [cats, ques] = await Promise.all([
-								getCategoriesAdmin(),
-								getQuestionsAdmin()
-							]);
-							setCategories(cats);
-							setQuestions(ques);
-						} catch (err) {
-							console.error('Failed to refresh admin data:', err);
-						}
-					}}
+					refreshData={fetchData}
 				/>
 			</div>
 			<Footer />
