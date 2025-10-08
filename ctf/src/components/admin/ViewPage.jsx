@@ -1,121 +1,130 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getCategoriesAdmin, getQuestionsAdmin, deleteQuestionAdmin } from '../api';
 
 function ViewPage({ onEditCategory, onEditQuestion }) {
-  const dummyCategories = ['Web Exploitation', 'Cryptography', 'Reverse Engineering', 'Binary Exploitation', 'Forensics'];
+	const [categories, setCategories] = useState([]);
+	const [questions, setQuestions] = useState([]);
+	const [selectedCategory, setSelectedCategory] = useState('');
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 
-  const dummyQuestions = {
-    'Web Exploitation': [
-      { title: 'SQL Injection Challenge', link: 'https://example.com/sql', description: 'Exploit SQL injection vulnerability', answer: 'flag{sql_injection}', points: '100' },
-      { title: 'XSS Attack', link: 'https://example.com/xss', description: 'Find XSS vulnerability', answer: 'flag{xss_found}', points: '150' },
-      { title: 'CSRF Token Bypass', link: 'https://example.com/csrf', description: 'Bypass CSRF protection', answer: 'flag{csrf_bypass}', points: '200' }
-    ],
-    'Cryptography': [
-      { title: 'Caesar Cipher', link: 'https://example.com/caesar', description: 'Decrypt Caesar cipher', answer: 'flag{caesar}', points: '50' },
-      { title: 'RSA Challenge', link: 'https://example.com/rsa', description: 'Break RSA encryption', answer: 'flag{rsa_broken}', points: '300' },
-      { title: 'AES Decryption', link: 'https://example.com/aes', description: 'Decrypt AES', answer: 'flag{aes_decrypt}', points: '250' }
-    ],
-    'Reverse Engineering': [
-      { title: 'Crack the Binary', link: 'https://example.com/binary', description: 'Reverse engineer binary', answer: 'flag{cracked}', points: '200' },
-      { title: 'Assembly Analysis', link: 'https://example.com/asm', description: 'Analyze assembly code', answer: 'flag{asm}', points: '150' },
-      { title: 'Obfuscated Code', link: 'https://example.com/obfuscated', description: 'Deobfuscate code', answer: 'flag{deobfuscated}', points: '250' }
-    ],
-    'Binary Exploitation': [
-      { title: 'Buffer Overflow', link: 'https://example.com/bof', description: 'Exploit buffer overflow', answer: 'flag{bof}', points: '300' },
-      { title: 'Format String Attack', link: 'https://example.com/format', description: 'Format string vulnerability', answer: 'flag{format}', points: '200' },
-      { title: 'ROP Chain', link: 'https://example.com/rop', description: 'Create ROP chain', answer: 'flag{rop}', points: '400' }
-    ],
-    'Forensics': [
-      { title: 'Image Analysis', link: 'https://example.com/image', description: 'Analyze image for hidden data', answer: 'flag{steganography}', points: '100' },
-      { title: 'Network Traffic', link: 'https://example.com/network', description: 'Analyze network packets', answer: 'flag{pcap}', points: '150' },
-      { title: 'Memory Dump', link: 'https://example.com/memory', description: 'Analyze memory dump', answer: 'flag{memory}', points: '250' }
-    ]
-  };
+	const fetchData = async () => {
+		try {
+			setLoading(true);
+			const catRes = await getCategoriesAdmin();
+			const quesRes = await getQuestionsAdmin();
 
-  const [selectedCategory, setSelectedCategory] = useState(dummyCategories[0]);
+			if (catRes.data) setCategories(catRes.data);
+			if (quesRes.data) setQuestions(quesRes.data);
 
-  const handleDeleteCategory = (category) => {
-    if (window.confirm(`Are you sure you want to delete the category "${category}"?`)) {
-      console.log('Deleting category:', category);
-    }
-  };
+			if (catRes.data && catRes.data.length > 0) setSelectedCategory(catRes.data[0]._id);
+		} catch (err) {
+			console.error(err);
+			setError('Failed to fetch data');
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  const handleDeleteQuestion = (category, question) => {
-    if (window.confirm(`Are you sure you want to delete the question "${question.title}"?`)) {
-      console.log('Deleting question:', question.title);
-    }
-  };
+	useEffect(() => {
+		fetchData();
+	}, []);
 
-  return (
-    <div className="view-page">
-      <h1>Overview</h1>
+	const handleDeleteCategory = async (categoryId, categoryName) => {
+		if (window.confirm(`Are you sure you want to delete category "${categoryName}"?`)) {
+			console.log('Category deletion is backend-dependent');
+			// Optionally call delete category API here if implemented
+		}
+	};
 
-      <div className="view-section">
-        <h2>All Categories</h2>
-        <div className="categories-list">
-          {dummyCategories.map((category, index) => (
-            <div key={index} className="list-item">
-              <span className="item-text">{category}</span>
-              <div className="item-actions">
-                <button
-                  className="icon-btn edit-btn"
-                  onClick={() => onEditCategory(category)}
-                  title="Edit"
-                >
-                  ✏️
-                </button>
-                <button
-                  className="icon-btn delete-btn"
-                  onClick={() => handleDeleteCategory(category)}
-                  title="Delete"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+	const handleDeleteQuestion = async (questionId, questionTitle) => {
+		if (window.confirm(`Are you sure you want to delete question "${questionTitle}"?`)) {
+			try {
+				await deleteQuestionAdmin(questionId);
+				setQuestions((prev) => prev.filter((q) => q._id !== questionId));
+			} catch (err) {
+				console.error(err);
+				alert('Failed to delete question');
+			}
+		}
+	};
 
-      <div className="view-section">
-        <h2>Questions by Category</h2>
-        <select
-          className="dropdown"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          {dummyCategories.map((category, index) => (
-            <option key={index} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+	if (loading) return <p>Loading...</p>;
+	if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
-        <div className="questions-list">
-          {dummyQuestions[selectedCategory]?.map((question, index) => (
-            <div key={index} className="list-item">
-              <span className="item-text">{question.title}</span>
-              <div className="item-actions">
-                <button
-                  className="icon-btn edit-btn"
-                  onClick={() => onEditQuestion(selectedCategory, question)}
-                  title="Edit"
-                >
-                  ✏️
-                </button>
-                <button
-                  className="icon-btn delete-btn"
-                  onClick={() => handleDeleteQuestion(selectedCategory, question)}
-                  title="Delete"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+	return (
+		<div className="view-page">
+			<h1>Overview</h1>
+
+			<div className="view-section">
+				<h2>All Categories</h2>
+				<div className="categories-list">
+					{categories.map((cat) => (
+						<div key={cat._id} className="list-item">
+							<span className="item-text">{cat.name}</span>
+							<div className="item-actions">
+								<button
+									className="icon-btn edit-btn"
+									onClick={() => onEditCategory(cat)}
+									title="Edit"
+								>
+									✏️
+								</button>
+								<button
+									className="icon-btn delete-btn"
+									onClick={() => handleDeleteCategory(cat._id, cat.name)}
+									title="Delete"
+								>
+									🗑️
+								</button>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+
+			<div className="view-section">
+				<h2>Questions by Category</h2>
+				<select
+					className="dropdown"
+					value={selectedCategory}
+					onChange={(e) => setSelectedCategory(e.target.value)}
+				>
+					{categories.map((cat) => (
+						<option key={cat._id} value={cat._id}>
+							{cat.name}
+						</option>
+					))}
+				</select>
+
+				<div className="questions-list">
+					{questions
+						.filter((q) => q.categoryId?._id === selectedCategory)
+						.map((q) => (
+							<div key={q._id} className="list-item">
+								<span className="item-text">{q.title}</span>
+								<div className="item-actions">
+									<button
+										className="icon-btn edit-btn"
+										onClick={() => onEditQuestion(q.categoryId, q)}
+										title="Edit"
+									>
+										✏️
+									</button>
+									<button
+										className="icon-btn delete-btn"
+										onClick={() => handleDeleteQuestion(q._id, q.title)}
+										title="Delete"
+									>
+										🗑️
+									</button>
+								</div>
+							</div>
+						))}
+				</div>
+			</div>
+		</div>
+	);
 }
 
 export default ViewPage;
