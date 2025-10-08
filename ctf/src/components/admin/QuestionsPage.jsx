@@ -9,7 +9,8 @@ function QuestionsPage() {
 		link: '',
 		description: '',
 		answer: '',
-		points: ''
+		points: '',
+		year: new Date().getFullYear()
 	});
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState('');
@@ -43,7 +44,7 @@ function QuestionsPage() {
 		setStatus('');
 		setError(null);
 
-		if (!formData.category || !formData.title || !formData.description || !formData.answer || !formData.points) {
+		if (!formData.category || !formData.title || !formData.description || !formData.answer || !formData.points || !formData.year) {
 			setError('All fields are required');
 			return;
 		}
@@ -54,7 +55,8 @@ function QuestionsPage() {
 			description: formData.description,
 			answer: formData.answer,
 			point: Number(formData.points),
-			link: formData.link || ''
+			link: formData.link || '',
+			year: Number(formData.year)
 		};
 
 		try {
@@ -63,7 +65,7 @@ function QuestionsPage() {
 
 			if (res && (res.statusCode === 201 || res.success)) {
 				setStatus('Question created successfully!');
-				setFormData(prev => ({ ...prev, title: '', link: '', description: '', answer: '', points: '' }));
+				setFormData(prev => ({ ...prev, title: '', link: '', description: '', answer: '', points: '', year: new Date().getFullYear() }));
 			} else {
 				setError(res.message || 'Failed to create question');
 			}
@@ -161,13 +163,27 @@ function QuestionsPage() {
 				<div className="form-group">
 					<label htmlFor="points">Points</label>
 					<input
-						type="text"
+						type="number"
 						id="points"
 						name="points"
 						className="input"
 						value={formData.points}
 						onChange={handleInputChange}
 						placeholder="Enter points"
+						disabled={loading}
+					/>
+				</div>
+
+				<div className="form-group">
+					<label htmlFor="year">Year</label>
+					<input
+						type="number"
+						id="year"
+						name="year"
+						className="input"
+						value={formData.year}
+						onChange={handleInputChange}
+						placeholder="Enter year"
 						disabled={loading}
 					/>
 				</div>

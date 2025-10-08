@@ -73,6 +73,17 @@ export const createCategoryAdmin = async (payload) => {
   return res.data;
 };
 
+// New endpoints for updating/deleting categories
+export const updateCategoryAdmin = async (id, payload) => {
+  const res = await api.patch(`/admin/categories/${id}`, payload);
+  return res.data;
+};
+
+export const deleteCategoryAdmin = async (id) => {
+  const res = await api.delete(`/admin/categories/${id}`);
+  return res.data;
+};
+
 export const getQuestionsAdmin = async () => {
   const res = await api.get('/admin/questions');
   return res.data;
@@ -107,6 +118,8 @@ export default {
   fetchQuestionsByCategory,
   getCategoriesAdmin,
   createCategoryAdmin,
+  updateCategoryAdmin,
+  deleteCategoryAdmin,
   getQuestionsAdmin,
   createQuestionAdmin,
   updateQuestionAdmin,
