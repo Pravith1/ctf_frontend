@@ -106,11 +106,6 @@ export default function CTFHeader() {
           <Link to="/leaderboard" className="nav-link">
             Scoreboard
           </Link>
-          {isAdmin() && (
-            <Link to="/admin" className="nav-link">
-              Dashboard
-            </Link>
-          )}
         </nav>
 
         <div className="ctf-actions">
@@ -121,41 +116,7 @@ export default function CTFHeader() {
           >
             <BellIcon />
           </button>
-          <button 
-            className="learn-btn"
-            onClick={() => navigate('/learn')}
-            style={{ 
-              padding: '8px 16px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              marginRight: '12px'
-            }}
-          >
-            Learn++
-          </button>
           <div className="user-menu" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '12px' }}>
-            <div 
-              className="user-avatar"
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'white'
-              }}
-            >
-              {userInitials}
-            </div>
             <button
               onClick={handleLogout}
               className="logout-btn"

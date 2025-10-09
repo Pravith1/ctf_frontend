@@ -12,7 +12,8 @@ export default function ArenaLogin() {
 		email: '',
 		password: '',
 		confirmPassword: '',
-		year: ''
+		year: '',
+		difficulty: 'beginner' // Default difficulty
 	});
 	const [isHovered, setIsHovered] = useState(false);
 	const [error, setError] = useState('');
@@ -46,7 +47,7 @@ export default function ArenaLogin() {
 				setError(result.message || 'Login failed');
 			}
 		} else {
-			// Signup logic - backend expects: { email, team_name, password, year }
+			// Signup logic - backend expects: { email, team_name, password, year, difficulty }
 			if (!formData.email || !formData.team_name || !formData.password || !formData.confirmPassword || !formData.year) {
 				setError('Please fill all fields');
 				return;
@@ -67,7 +68,8 @@ export default function ArenaLogin() {
 				email: formData.email,
 				team_name: formData.team_name,
 				password: formData.password,
-				year: parseInt(formData.year)
+				year: parseInt(formData.year),
+				difficulty: formData.difficulty // Include difficulty field
 			});
 
 			if (result.success) {
@@ -80,7 +82,7 @@ export default function ArenaLogin() {
 
 	const toggleMode = () => {
 		setIsLogin(!isLogin);
-		setFormData({ team_name: '', email: '', password: '', confirmPassword: '', year: '' });
+		setFormData({ team_name: '', email: '', password: '', confirmPassword: '', year: '', difficulty: 'beginner' });
 		setError('');
 	};
 
@@ -138,22 +140,38 @@ export default function ArenaLogin() {
 
 					{/* Year only for signup */}
 					{!isLogin && (
-						<div className="form-group">
-							<label className="form-label">Year</label>
-							<select
-								name="year"
-								value={formData.year}
-								onChange={handleInputChange}
-								className="form-input"
-								style={{ cursor: 'pointer' }}
-							>
-								<option value="">Select Year</option>
-								<option value="1">1st Year</option>
-								<option value="2">2nd Year</option>
-								<option value="3">3rd Year</option>
-								<option value="4">4th Year</option>
-							</select>
-						</div>
+						<>
+							<div className="form-group">
+								<label className="form-label">Year</label>
+								<select
+									name="year"
+									value={formData.year}
+									onChange={handleInputChange}
+									className="form-input"
+									style={{ cursor: 'pointer' }}
+								>
+									<option value="">Select Year</option>
+									<option value="1">1st Year</option>
+									<option value="2">2nd Year</option>
+									<option value="3">3rd Year</option>
+									<option value="4">4th Year</option>
+								</select>
+							</div>
+
+							<div className="form-group">
+								<label className="form-label">Difficulty Level</label>
+								<select
+									name="difficulty"
+									value={formData.difficulty}
+									onChange={handleInputChange}
+									className="form-input"
+									style={{ cursor: 'pointer' }}
+								>
+									<option value="beginner">Beginner</option>
+									<option value="intermediate">Intermediate</option>
+								</select>
+							</div>
+						</>
 					)}
 
 					{/* Password */}

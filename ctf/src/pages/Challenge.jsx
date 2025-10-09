@@ -1,226 +1,250 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CTFHeader from '../components/layout/CTFHeader';
+import ChallengeFilters from '../components/challenges/ChallengeFilters';
+import QuestionsGrid from '../components/challenges/QuestionsGrid';
+import { 
+  fetchSubmissionCategories, 
+  fetchQuestionsByCategory, 
+  fetchSolvedQuestions, 
+  fetchUnsolvedQuestions 
+} from '../api';
 import './chalenge.css';
 
 const ChallengesPage = () => {
   const navigate = useNavigate();
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [difficultyFilter, setDifficultyFilter] = useState('All');
-  const [solvedFilter, setSolvedFilter] = useState('Unsolved');
-  const [orderFilter, setOrderFilter] = useState('Most Solves');
+  const [categories, setCategories] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [solvedFilter, setSolvedFilter] = useState('All');
+  const [orderFilter, setOrderFilter] = useState('Points');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const challenges = [
-    {
-      id: 1,
-      title: 'Practice Flag',
-      difficulty: 'Easy',
-      points: 10,
-      comments: 872,
-      rating: 4.12,
-      category: 'Miscellaneous',
-      author: 'intelgent',
-      solves: 100617,
-      description: 'Learn the basics of CTF challenges by submitting your first flag.',
-      linkText: 'link',
-      linkUrl: '#',
-      additionalInfo: "Don't know where to begin? Check out CTFlearn's",
-      additionalLinkText: 'Getting Started Guide',
-      additionalLinkUrl: '#',
-      tags: ['Beginner', 'Practice']
-    },
-    {
-      id: 2,
-      title: 'Basic Injection',
-      difficulty: 'Easy',
-      points: 30,
-      comments: 969,
-      rating: 4.61,
-      category: 'Web',
-      author: 'intelgent',
-      solves: 64742,
-      description: 'See if you can leak the whole database using what you know about SQL Injections.',
-      linkText: 'link',
-      linkUrl: '#',
-      additionalInfo: "Don't know where to begin? Check out CTFlearn's",
-      additionalLinkText: 'SQL Injection Lab',
-      additionalLinkUrl: '#',
-      tags: ['Web', 'intelgent']
-    },
-    {
-      id: 3,
-      title: 'Forensics 101',
-      difficulty: 'Easy',
-      points: 30,
-      comments: 500,
-      rating: 4.49,
-      category: 'Forensics',
-      author: 'intelgent',
-      solves: 49558,
-      description: 'Analyze the provided file to extract hidden information.',
-      linkText: 'download file',
-      linkUrl: '#',
-      additionalInfo: "Need help with forensics? Visit",
-      additionalLinkText: 'Forensics Guide',
-      additionalLinkUrl: '#',
-      tags: ['Forensics', 'intelgent']
-    },
-    {
-      id: 4,
-      title: 'Character Encoding',
-      difficulty: 'Easy',
-      points: 20,
-      comments: 338,
-      rating: 4.40,
-      category: 'Cryptography',
-      author: 'dkn11902',
-      solves: 46048,
-      description: 'Decode the message using various character encoding schemes.',
-      linkText: 'view cipher',
-      linkUrl: '#',
-      additionalInfo: "Learn more about encoding at",
-      additionalLinkText: 'Crypto Basics',
-      additionalLinkUrl: '#',
-      tags: ['Cryptography', 'Encoding']
-    },
-    {
-      id: 5,
-      title: 'Taking LS',
-      difficulty: 'Easy',
-      points: 10,
-      comments: 420,
-      rating: 3.91,
-      category: 'Miscellaneous',
-      author: 'intelgent',
-      solves: 38420,
-      description: 'Navigate through the Linux file system to find the hidden flag.',
-      linkText: 'connect',
-      linkUrl: '#',
-      additionalInfo: "New to Linux? Check out",
-      additionalLinkText: 'Linux Command Guide',
-      additionalLinkUrl: '#',
-      tags: ['Linux', 'Miscellaneous']
-    },
-    {
-      id: 6,
-      title: 'Base 2 2 the 6',
-      difficulty: 'Easy',
-      points: 20,
-      comments: 245,
-      rating: 4.22,
-      category: 'Cryptography',
-      author: 'intelgent',
-      solves: 35678,
-      description: 'Decode the base64 encoded message to reveal the flag.',
-      linkText: 'view encoded text',
-      linkUrl: '#',
-      additionalInfo: "Learn about base encoding at",
-      additionalLinkText: 'Encoding Guide',
-      additionalLinkUrl: '#',
-      tags: ['Cryptography', 'Base64']
+  // Fetch categories on mount
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  // Fetch questions when category or solved filter changes
+  useEffect(() => {
+    if (selectedCategory) {
+      loadQuestions(selectedCategory, solvedFilter);
     }
-  ];
+  }, [selectedCategory, solvedFilter]);
 
-  const handleChallengeClick = (challenge) => {
-    navigate(`/challenge/${challenge.id}`, { state: { challenge } });
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await fetchSubmissionCategories();
+      if (response.success) {
+        setCategories(response.data);
+        // Auto-select first category
+        if (response.data.length > 0) {
+          setSelectedCategory(response.data[0]._id);
+          setCategoryFilter(response.data[0].name);
+        }
+      } else {
+        setError('No categories available');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load categories. Please login again.');
+      console.error('Category load error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const loadQuestions = async (categoryId, filter = 'All') => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      let response;
+      
+      // Choose endpoint based on filter
+      switch (filter) {
+        case 'Solved':
+          response = await fetchSolvedQuestions(categoryId);
+          break;
+        case 'Unsolved':
+          response = await fetchUnsolvedQuestions(categoryId);
+          break;
+        case 'All':
+        default:
+          response = await fetchQuestionsByCategory(categoryId);
+          break;
+      }
+      
+      if (response.success) {
+        // Handle different response structures
+        if (filter === 'Solved') {
+          setQuestions(response.data.questions || []);
+        } else if (filter === 'Unsolved') {
+          setQuestions(response.data.unsolvedQuestions || []);
+        } else {
+          setQuestions(response.data.questions || []);
+        }
+      } else {
+        setQuestions([]);
+        setError(`No ${filter.toLowerCase()} questions available for this category`);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load questions');
+      setQuestions([]);
+      console.error('Questions load error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategoryChange = useCallback((categoryName) => {
+    setCategoryFilter(categoryName);
+    const category = categories.find(c => c.name === categoryName);
+    if (category) {
+      setSelectedCategory(category._id);
+    }
+  }, [categories]);
+
+  const handleSolvedFilterChange = useCallback((filter) => {
+    setSolvedFilter(filter);
+  }, []);
+
+  const handleOrderFilterChange = useCallback((order) => {
+    setOrderFilter(order);
+  }, []);
+
+  const handleSearchChange = useCallback((query) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleChallengeClick = useCallback((question) => {
+    navigate(`/challenge/${question._id}`, { 
+      state: { 
+        challenge: {
+          _id: question._id, // MongoDB ID
+          id: question._id,  // Also keep id for compatibility
+          title: question.title,
+          description: question.description,
+          points: question.point,
+          difficulty: question.difficulty,
+          category: question.categoryId?.name || categoryFilter,
+          year: question.year,
+          solves: question.solved_count || 0
+        } 
+      } 
+    });
+  }, [navigate, categoryFilter]);
+
+  // Memoize filtered and sorted questions
+  const filteredQuestions = useMemo(() => {
+    let filtered = [...questions];
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(q => 
+        q.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        q.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Sort based on orderFilter
+    filtered.sort((a, b) => {
+      switch (orderFilter) {
+        case 'Points':
+          return b.point - a.point; // High to low
+        case 'Solves':
+          return (b.solved_count || 0) - (a.solved_count || 0);
+        case 'Newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'Oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [questions, searchQuery, orderFilter]);
+
+  if (loading) {
+    return (
+      <div className="ctflearn-container">
+        <CTFHeader />
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '60vh',
+          color: '#fff',
+          fontSize: '18px'
+        }}>
+          Loading challenges...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="ctflearn-container">
+        <CTFHeader />
+        <div style={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '60vh',
+          color: '#ef4444',
+          fontSize: '18px',
+          gap: '16px'
+        }}>
+          <div>{error}</div>
+          <button
+            onClick={loadCategories}
+            style={{
+              padding: '12px 24px',
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ctflearn-container">
       <CTFHeader />
 
       <main className="main-content">
-        <div className="filters-section">
-          <div className="filter-row">
-            <div className="filter-group">
-              <label>Category</label>
-              <select 
-                value={categoryFilter} 
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option>All</option>
-                <option>Web</option>
-                <option>Cryptography</option>
-                <option>Forensics</option>
-                <option>Miscellaneous</option>
-              </select>
-            </div>
+        <ChallengeFilters
+          categories={categories}
+          categoryFilter={categoryFilter}
+          solvedFilter={solvedFilter}
+          orderFilter={orderFilter}
+          searchQuery={searchQuery}
+          onCategoryChange={handleCategoryChange}
+          onSolvedFilterChange={handleSolvedFilterChange}
+          onOrderFilterChange={handleOrderFilterChange}
+          onSearchChange={handleSearchChange}
+        />
 
-            <div className="filter-group">
-              <label>Difficulty</label>
-              <select 
-                value={difficultyFilter} 
-                onChange={(e) => setDifficultyFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option>All</option>
-                <option>Easy</option>
-                <option>Medium</option>
-                <option>Hard</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>Solved</label>
-              <select 
-                value={solvedFilter} 
-                onChange={(e) => setSolvedFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option>Unsolved</option>
-                <option>Solved</option>
-                <option>All</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>Order</label>
-              <select 
-                value={orderFilter} 
-                onChange={(e) => setOrderFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option>Most Solves</option>
-                <option>Least Solves</option>
-                <option>Highest Rated</option>
-                <option>Most Recent</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="challenges-grid">
-          {challenges.map((challenge) => (
-            <div 
-              key={challenge.id} 
-              className="challenge-card"
-              onClick={() => handleChallengeClick(challenge)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="card-header">
-                <h3 className="challenge-title">{challenge.title}</h3>
-                <span className="difficulty-badge">{challenge.difficulty}</span>
-              </div>
-
-              <div className="card-stats">
-                <div className="stat">
-                  <span className="stat-value">{challenge.points}</span>
-                  <span className="stat-label">points</span>
-                </div>
-              </div>
-
-              <div className="card-footer">
-                <div className="challenge-meta">
-                  <span className="category">{challenge.category}</span>
-                  <span className="separator">·</span>
-                </div>
-                <div className="solves">{challenge.solves.toLocaleString()} solves</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <QuestionsGrid
+          questions={filteredQuestions}
+          solvedFilter={solvedFilter}
+          categoryFilter={categoryFilter}
+          onQuestionClick={handleChallengeClick}
+        />
       </main>
     </div>
   );

@@ -29,9 +29,9 @@ export const AuthProvider = ({ children }) => {
   // Check admin status from backend (optional - only if endpoint exists)
   const checkAdminStatus = async () => {
     try {
-      const response = await api.checkAdmin();
-      // Backend returns: { isAdmin: true/false }
-      setIsAdminUser(response.isAdmin === true);
+      const response = await api.checkIsAdmin();
+      // Backend returns: { flag: true/false }
+      setIsAdminUser(response.flag === true);
     } catch (error) {
       // If endpoint doesn't exist (404), fall back to field check
       console.log('Admin endpoint not available, using field check');
@@ -39,17 +39,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Signup function - matches backend: { email, team_name, password, year }
+  // Signup function - matches backend: { email, team_name, password, year, difficulty }
   const signup = async (signupData) => {
     try {
+      console.log('📝 Attempting signup...');
       const response = await api.signup(signupData);
+      console.log('✅ Signup response:', response);
       
-      // Backend returns: { user: { email, team_name, year, field } }
+      // Backend returns: { user: { email, team_name, year, difficulty, field } }
       // Cookie is set automatically by backend
       const userData = {
         email: response.user.email,
         team_name: response.user.team_name,
         year: response.user.year,
+        difficulty: response.user.difficulty,
         field: response.user.field
       };
       
@@ -59,10 +62,15 @@ export const AuthProvider = ({ children }) => {
       // Set admin status based on field
       setIsAdminUser(userData.field === 'admin');
       
+      console.log('✅ User signed up successfully:', userData);
+      console.log('🍪 Cookie should be set by backend');
+      
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Signup error:', error);
-      const message = error.response?.data?.message || 'Signup failed. Please try again.';
+      console.error('❌ Signup error:', error);
+      console.error('Response data:', error.response?.data);
+      // Extract backend error message from response
+      const message = error.response?.data?.message || error.response?.data?.error || 'Signup failed. Please try again.';
       return { success: false, message };
     }
   };
@@ -70,7 +78,9 @@ export const AuthProvider = ({ children }) => {
   // Login function - matches backend: { team_name, password }
   const login = async (credentials) => {
     try {
+      console.log('🔐 Attempting login...');
       const response = await api.login(credentials);
+      console.log('✅ Login response:', response);
       
       // Backend returns: { user: { email, team_name, year, field } }
       // Cookie is set automatically by backend
@@ -87,10 +97,15 @@ export const AuthProvider = ({ children }) => {
       // Check admin status from backend
       await checkAdminStatus();
       
+      console.log('✅ User logged in successfully:', userData);
+      console.log('🍪 Cookie should be set by backend');
+      
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error:', error);
-      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      console.error('❌ Login error:', error);
+      console.error('Response data:', error.response?.data);
+      // Extract backend error message from response
+      const message = error.response?.data?.message || error.response?.data?.error || 'Login failed. Please try again.';
       return { success: false, message };
     }
   };
@@ -98,17 +113,21 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
+      console.log('🚪 Attempting logout...');
       await api.logout();
+      console.log('✅ Logout API call successful');
       localStorage.removeItem('user');
       setUser(null);
       setIsAdminUser(false);
+      console.log('✅ User logged out, localStorage cleared');
       return { success: true };
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ Logout error:', error);
       // Even if API call fails, clear local state
       localStorage.removeItem('user');
       setUser(null);
       setIsAdminUser(false);
+      console.log('⚠️ Forced logout - cleared local state despite API error');
       return { success: false, message: error.message };
     }
   };

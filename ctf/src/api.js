@@ -1,25 +1,61 @@
 import axios from 'axios';
 
 // Use hosted backend URL or fallback to Vite env or localhost
-const BASE_URL =
-  'https://ctf-backend-1.onrender.com' || // Hosted backend
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL) ||
-  process.env.BACKEND_URL ||
-  'http://localhost:5000';
+const BASE_URL ='http://localhost:5000';
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // send cookies (jwt) to backend
+  withCredentials: true, // CRITICAL: Send cookies with requests
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Central response handler (optional)
+// Request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`📤 ${config.method.toUpperCase()} ${config.url}`);
+    console.log('🍪 Cookies being sent:', document.cookie || 'No cookies found');
+    console.log('📋 Request config:', {
+      withCredentials: config.withCredentials,
+      baseURL: config.baseURL
+    });
+    return config;
+  },
+  (error) => {
+    console.error('❌ Request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Central response handler
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    console.log(`📥 Response from ${res.config.url}:`, res.status);
+    console.log('✅ Response headers:', res.headers);
+    if (res.headers['set-cookie']) {
+      console.log('🍪 Backend set cookie:', res.headers['set-cookie']);
+    }
+    return res;
+  },
   (err) => {
-    // Global error handling example: 401 -> redirect to login
+    console.error(`❌ Error from ${err.config?.url}:`, err.response?.status, err.response?.data);
+    console.error('🍪 Current cookies:', document.cookie || 'No cookies');
+    
+    // Handle 401 Unauthorized errors
+    if (err.response?.status === 401) {
+      const currentPath = window.location.pathname;
+      console.warn('⚠️ 401 Unauthorized - JWT Cookie is missing or invalid!');
+      console.error('💥 THIS IS WHY YOUR COOKIE IS "CLEARED" - Backend rejected it!');
+      console.error('🔧 Backend needs to fix cookie configuration (sameSite, secure, path)');
+      
+      // Only redirect to login if not already on login page
+      if (currentPath !== '/' && currentPath !== '/login') {
+        console.log('🔄 Redirecting to login page...');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+      }
+    }
     return Promise.reject(err);
   }
 );
@@ -42,8 +78,8 @@ export const logout = async () => {
 };
 
 // Check if user is admin
-export const checkAdmin = async () => {
-  const res = await api.get('/auth/admin');
+export const checkIsAdmin = async () => {
+  const res = await api.get('/admin/isAdmin');
   return res.data;
 };
 
@@ -66,6 +102,30 @@ export const fetchSubmissionCategories = async () => {
 
 export const fetchQuestionsByCategory = async (categoryId) => {
   const res = await api.post('/submission/questions', { categoryId });
+  return res.data;
+};
+
+// Get individual question details
+export const fetchQuestionDetails = async (question_id) => {
+  const res = await api.post('/submission/question', { question_id });
+  return res.data;
+};
+
+// Check if question is solved
+export const checkQuestionSolved = async (question_id) => {
+  const res = await api.post('/submission/is-solved', { question_id });
+  return res.data;
+};
+
+// Fetch solved questions by category
+export const fetchSolvedQuestions = async (categoryId) => {
+  const res = await api.post('/submission/solved', { categoryId });
+  return res.data;
+};
+
+// Fetch unsolved questions by category
+export const fetchUnsolvedQuestions = async (categoryId) => {
+  const res = await api.post('/submission/un-solved', { categoryId });
   return res.data;
 };
 
