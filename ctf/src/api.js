@@ -32,11 +32,18 @@ export const signup = async (payload) => {
 
 export const login = async (payload) => {
   const res = await api.post('/auth/login', payload);
+  console.log(res.data);
   return res.data;
 };
 
 export const logout = async () => {
   const res = await api.post('/auth/logout');
+  return res.data;
+};
+
+// Check if user is admin
+export const checkAdmin = async () => {
+  const res = await api.get('/auth/admin');
   return res.data;
 };
 

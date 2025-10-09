@@ -5,15 +5,17 @@ import "./LoginPage.css"
 
 export default function ArenaLogin() {
 	const navigate = useNavigate();
-	const { login } = useAuth();
+	const { login, signup } = useAuth();
 	const [isLogin, setIsLogin] = useState(true);
 	const [formData, setFormData] = useState({
-		username: '',
+		team_name: '',
 		email: '',
 		password: '',
-		confirmPassword: ''
+		confirmPassword: '',
+		year: ''
 	});
 	const [isHovered, setIsHovered] = useState(false);
+	const [error, setError] = useState('');
 
 	const handleInputChange = (e) => {
 		setFormData({
@@ -23,50 +25,63 @@ export default function ArenaLogin() {
 	};
 
 	const handleSubmit = async () => {
+		setError('');
+		
 		if (isLogin) {
-			// Login logic (only username + password)
-			if (!formData.username || !formData.password) {
-				alert('Please enter username and password');
+			// Login logic - backend expects: { team_name, password }
+			if (!formData.team_name || !formData.password) {
+				setError('Please enter team name and password');
 				return;
 			}
 
-			const result = await login({ username: formData.username, password: formData.password });
+			const result = await login({ 
+				team_name: formData.team_name, 
+				password: formData.password 
+			});
 
 			if (result.success) {
-				// Redirect based on role
-				navigate(result.role === 'admin' ? '/admin' : '/leaderboard');
+				// Redirect based on user field
+				navigate(result.user.field === 'admin' ? '/admin' : '/leaderboard');
 			} else {
-				alert(result.message || 'Login failed');
+				setError(result.message || 'Login failed');
 			}
 		} else {
-			// Register logic (username + email + password + confirmPassword)
-			if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
-				alert('Please fill all fields');
+			// Signup logic - backend expects: { email, team_name, password, year }
+			if (!formData.email || !formData.team_name || !formData.password || !formData.confirmPassword || !formData.year) {
+				setError('Please fill all fields');
+				return;
+			}
+
+			// Validate email domain
+			if (!formData.email.endsWith('@psgtech.ac.in')) {
+				setError('Please use your official PSG Tech email (@psgtech.ac.in)');
 				return;
 			}
 
 			if (formData.password !== formData.confirmPassword) {
-				alert('Passwords do not match');
+				setError('Passwords do not match');
 				return;
 			}
 
-			const result = await login({
-				username: formData.username,
+			const result = await signup({
 				email: formData.email,
-				password: formData.password
+				team_name: formData.team_name,
+				password: formData.password,
+				year: parseInt(formData.year)
 			});
 
 			if (result.success) {
-				navigate(result.role === 'admin' ? '/admin' : '/leaderboard');
+				navigate('/leaderboard');
 			} else {
-				alert(result.message || 'Registration failed');
+				setError(result.message || 'Registration failed');
 			}
 		}
 	};
 
 	const toggleMode = () => {
 		setIsLogin(!isLogin);
-		setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+		setFormData({ team_name: '', email: '', password: '', confirmPassword: '', year: '' });
+		setError('');
 	};
 
 	return (
@@ -78,32 +93,66 @@ export default function ArenaLogin() {
 			>
 				<h1 className="login-title">{isLogin ? 'Enter the Arena' : 'Join the Arena'}</h1>
 
+				{error && (
+					<div style={{
+						background: 'rgba(239, 68, 68, 0.1)',
+						border: '1px solid #ef4444',
+						color: '#ef4444',
+						padding: '12px',
+						borderRadius: '8px',
+						marginBottom: '16px',
+						fontSize: '14px'
+					}}>
+						{error}
+					</div>
+				)}
+
 				<div>
-					{/* Username */}
+					{/* Team Name */}
 					<div className="form-group">
-						<label className="form-label">Username</label>
+						<label className="form-label">Team Name</label>
 						<input
 							type="text"
-							name="username"
-							value={formData.username}
+							name="team_name"
+							value={formData.team_name}
 							onChange={handleInputChange}
-							placeholder="your_username"
+							placeholder="your_team_name"
 							className="form-input"
 						/>
 					</div>
 
-					{/* Email only for register */}
+					{/* Email only for signup */}
 					{!isLogin && (
 						<div className="form-group">
-							<label className="form-label">Email</label>
+							<label className="form-label">Email (@psgtech.ac.in)</label>
 							<input
 								type="email"
 								name="email"
 								value={formData.email}
 								onChange={handleInputChange}
-								placeholder="your.email@example.com"
+								placeholder="your.email@psgtech.ac.in"
 								className="form-input"
 							/>
+						</div>
+					)}
+
+					{/* Year only for signup */}
+					{!isLogin && (
+						<div className="form-group">
+							<label className="form-label">Year</label>
+							<select
+								name="year"
+								value={formData.year}
+								onChange={handleInputChange}
+								className="form-input"
+								style={{ cursor: 'pointer' }}
+							>
+								<option value="">Select Year</option>
+								<option value="1">1st Year</option>
+								<option value="2">2nd Year</option>
+								<option value="3">3rd Year</option>
+								<option value="4">4th Year</option>
+							</select>
 						</div>
 					)}
 

@@ -55,14 +55,14 @@ export default function CTFHeader() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
   const userInitials = useMemo(() => {
-    if (!user?.username) return '';
-    return user.username
+    if (!user?.team_name) return 'CT';
+    return user.team_name
       .split(' ')
       .map(part => part.charAt(0).toUpperCase())
       .slice(0, 2)
@@ -114,6 +114,74 @@ export default function CTFHeader() {
         </nav>
 
         <div className="ctf-actions">
+          <button 
+            className="notification-btn" 
+            aria-label="Notifications"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+          >
+            <BellIcon />
+          </button>
+          <button 
+            className="learn-btn"
+            onClick={() => navigate('/learn')}
+            style={{ 
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              marginRight: '12px'
+            }}
+          >
+            Learn++
+          </button>
+          <div className="user-menu" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '12px' }}>
+            <div 
+              className="user-avatar"
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'white'
+              }}
+            >
+              {userInitials}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="logout-btn"
+              style={{
+                padding: '8px 16px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid #ef4444',
+                borderRadius: '8px',
+                color: '#ef4444',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#ef4444';
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                e.target.style.color = '#ef4444';
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     </header>
