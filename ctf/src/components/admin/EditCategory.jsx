@@ -1,17 +1,22 @@
 import { useState } from 'react';
+import { updateCategoryAdmin } from '../../api.js';
 
 function EditCategory({ category, onBack }) {
-  const [categoryName, setCategoryName] = useState(category);
+  const [categoryName, setCategoryName] = useState(category.name);
   const [status, setStatus] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Updating category:', categoryName);
-    setStatus('Category updated successfully!');
-    setTimeout(() => {
-      setStatus('');
-      onBack();
-    }, 2000);
+    try {
+      await updateCategoryAdmin(category._id, { name: categoryName });
+      setStatus('Category updated successfully!');
+      setTimeout(() => {
+        setStatus('');
+        onBack();
+      }, 2000);
+    } catch (err) {
+      setStatus(err.response?.data?.message || 'Failed to update category');
+    }
   };
 
   return (

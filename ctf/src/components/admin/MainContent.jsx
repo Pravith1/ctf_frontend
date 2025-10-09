@@ -16,6 +16,7 @@ function MainContent({
 	loading = false,
 	refreshData
 }) {
+	// Render editing screens first
 	if (editingCategory) {
 		return (
 			<div className="main-content">
@@ -41,8 +42,9 @@ function MainContent({
 		);
 	}
 
+	// Render main pages
 	return (
-		<div className="main-content">
+		<div className="main-content" style={{ flex: 1, padding: '20px' }}>
 			{loading ? (
 				<div className="loading-container">
 					<p style={{ color: '#ccc', textAlign: 'center', marginTop: '20px' }}>
@@ -63,18 +65,26 @@ function MainContent({
 
 					{activeMenu === 'Categories' && (
 						<CategoriesPage
-							categories={categories}
+							categories={categories || []} // fallback to empty array
+							onEditCategory={onEditCategory} // pass handler for editing
 							refreshData={refreshData}
 						/>
 					)}
 
 					{activeMenu === 'Questions' && (
 						<QuestionsPage
-							questions={questions}
-							categories={categories}
+							questions={questions || []} // fallback to empty array
+							categories={categories || []} // fallback
 							onEditQuestion={onEditQuestion}
 							refreshData={refreshData}
 						/>
+					)}
+
+					{/* Catch-all if activeMenu is invalid */}
+					{!['Overview', 'Categories', 'Questions'].includes(activeMenu) && (
+						<p style={{ color: '#ccc', textAlign: 'center', marginTop: '20px' }}>
+							Select a menu item from the sidebar
+						</p>
 					)}
 				</>
 			)}

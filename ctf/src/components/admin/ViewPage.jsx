@@ -1,56 +1,128 @@
 import { useState, useEffect } from 'react';
-import { getCategoriesAdmin, getQuestionsAdmin, deleteQuestionAdmin } from '../api';
+import {
+	getCategoriesAdmin,
+	deleteCategoryAdmin,
+	getQuestionsAdmin,
+	deleteQuestionAdmin,
+	updateCategoryAdmin,
+	updateQuestionAdmin
+} from '../../api';
+import EditCategory from './EditCategory';
+import EditQuestion from './EditQuestion';
 
-function ViewPage({ onEditCategory, onEditQuestion }) {
+function ViewPage() {
 	const [categories, setCategories] = useState([]);
-	const [questions, setQuestions] = useState([]);
+	const [questionsByCategory, setQuestionsByCategory] = useState({});
 	const [selectedCategory, setSelectedCategory] = useState('');
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
 
-	const fetchData = async () => {
+	// For editing
+	const [editingCategory, setEditingCategory] = useState(null);
+	const [editingQuestion, setEditingQuestion] = useState(null);
+
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const catRes = await getCategoriesAdmin();
+				const cats = catRes.data || [];
+				setCategories(cats);
+				setSelectedCategory(cats[0]?.name || '');
+
+				const quesRes = await getQuestionsAdmin();
+				const ques = quesRes.data || [];
+
+				const grouped = {};
+				ques.forEach(q => {
+					const catName = q.categoryId?.name || 'Uncategorized';
+					if (!grouped[catName]) grouped[catName] = [];
+					grouped[catName].push(q);
+				});
+				setQuestionsByCategory(grouped);
+			} catch (err) {
+				console.error('Error fetching data:', err);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchData();
+	}, []);
+
+	const refreshData = async () => {
+		setLoading(true);
 		try {
-			setLoading(true);
 			const catRes = await getCategoriesAdmin();
+			const cats = catRes.data || [];
+			setCategories(cats);
+			setSelectedCategory(cats[0]?.name || '');
+
 			const quesRes = await getQuestionsAdmin();
-
-			if (catRes.data) setCategories(catRes.data);
-			if (quesRes.data) setQuestions(quesRes.data);
-
-			if (catRes.data && catRes.data.length > 0) setSelectedCategory(catRes.data[0]._id);
+			const ques = quesRes.data || [];
+			const grouped = {};
+			ques.forEach(q => {
+				const catName = q.categoryId?.name || 'Uncategorized';
+				if (!grouped[catName]) grouped[catName] = [];
+				grouped[catName].push(q);
+			});
+			setQuestionsByCategory(grouped);
 		} catch (err) {
 			console.error(err);
-			setError('Failed to fetch data');
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	useEffect(() => {
-		fetchData();
-	}, []);
-
-	const handleDeleteCategory = async (categoryId, categoryName) => {
-		if (window.confirm(`Are you sure you want to delete category "${categoryName}"?`)) {
-			console.log('Category deletion is backend-dependent');
-			// Optionally call delete category API here if implemented
-		}
-	};
-
-	const handleDeleteQuestion = async (questionId, questionTitle) => {
-		if (window.confirm(`Are you sure you want to delete question "${questionTitle}"?`)) {
+	const handleDeleteCategory = async (category) => {
+		const catObj = categories.find(c => c.name === category);
+		if (!catObj) return;
+		if (window.confirm(`Are you sure you want to delete the category "${category}"?`)) {
 			try {
-				await deleteQuestionAdmin(questionId);
-				setQuestions((prev) => prev.filter((q) => q._id !== questionId));
+				await deleteCategoryAdmin(catObj._id);
+				refreshData();
 			} catch (err) {
-				console.error(err);
-				alert('Failed to delete question');
+				alert(err.response?.data?.message || 'Failed to delete category');
 			}
 		}
 	};
 
-	if (loading) return <p>Loading...</p>;
-	if (error) return <p style={{ color: 'red' }}>{error}</p>;
+	const handleDeleteQuestion = async (questionId) => {
+		if (window.confirm('Are you sure you want to delete this question?')) {
+			try {
+				await deleteQuestionAdmin(questionId);
+				refreshData();
+			} catch (err) {
+				alert(err.response?.data?.message || 'Failed to delete question');
+			}
+		}
+	};
+
+	if (loading) return <div>Loading...</div>;
+
+	// If editing a category
+	if (editingCategory) {
+		return (
+			<EditCategory
+				category={editingCategory}
+				onBack={() => {
+					setEditingCategory(null);
+					refreshData();
+				}}
+			/>
+		);
+	}
+
+	// If editing a question
+	if (editingQuestion) {
+		return (
+			<EditQuestion
+				category={editingQuestion.category}
+				question={editingQuestion}
+				onBack={() => {
+					setEditingQuestion(null);
+					refreshData();
+				}}
+			/>
+		);
+	}
 
 	return (
 		<div className="view-page">
@@ -59,20 +131,20 @@ function ViewPage({ onEditCategory, onEditQuestion }) {
 			<div className="view-section">
 				<h2>All Categories</h2>
 				<div className="categories-list">
-					{categories.map((cat) => (
-						<div key={cat._id} className="list-item">
-							<span className="item-text">{cat.name}</span>
+					{categories.map(category => (
+						<div key={category._id} className="list-item">
+							<span className="item-text">{category.name}</span>
 							<div className="item-actions">
 								<button
 									className="icon-btn edit-btn"
-									onClick={() => onEditCategory(cat)}
+									onClick={() => setEditingCategory(category)}
 									title="Edit"
 								>
 									✏️
 								</button>
 								<button
 									className="icon-btn delete-btn"
-									onClick={() => handleDeleteCategory(cat._id, cat.name)}
+									onClick={() => handleDeleteCategory(category.name)}
 									title="Delete"
 								>
 									🗑️
@@ -90,37 +162,38 @@ function ViewPage({ onEditCategory, onEditQuestion }) {
 					value={selectedCategory}
 					onChange={(e) => setSelectedCategory(e.target.value)}
 				>
-					{categories.map((cat) => (
-						<option key={cat._id} value={cat._id}>
-							{cat.name}
+					{categories.map(category => (
+						<option key={category._id} value={category.name}>
+							{category.name}
 						</option>
 					))}
 				</select>
 
 				<div className="questions-list">
-					{questions
-						.filter((q) => q.categoryId?._id === selectedCategory)
-						.map((q) => (
-							<div key={q._id} className="list-item">
-								<span className="item-text">{q.title}</span>
-								<div className="item-actions">
-									<button
-										className="icon-btn edit-btn"
-										onClick={() => onEditQuestion(q.categoryId, q)}
-										title="Edit"
-									>
-										✏️
-									</button>
-									<button
-										className="icon-btn delete-btn"
-										onClick={() => handleDeleteQuestion(q._id, q.title)}
-										title="Delete"
-									>
-										🗑️
-									</button>
-								</div>
+					{questionsByCategory[selectedCategory]?.map(question => (
+						<div key={question._id} className="list-item">
+							<span className="item-text">{question.title}</span>
+							<div className="item-actions">
+								<button
+									className="icon-btn edit-btn"
+									onClick={() => setEditingQuestion({
+										category: selectedCategory,
+										...question
+									})}
+									title="Edit"
+								>
+									✏️
+								</button>
+								<button
+									className="icon-btn delete-btn"
+									onClick={() => handleDeleteQuestion(question._id)}
+									title="Delete"
+								>
+									🗑️
+								</button>
 							</div>
-						))}
+						</div>
+					))}
 				</div>
 			</div>
 		</div>
