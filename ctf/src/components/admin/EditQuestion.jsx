@@ -1,38 +1,63 @@
 import { useState, useEffect } from 'react';
-import { updateQuestionAdmin, getCategoriesAdmin } from '../../api.js';
+import { updateQuestionAdmin, getCategoriesAdmin, fetchQuestionDetails } from '../../api.js';
 
 function EditQuestion({ category, question, onBack }) {
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
-    category: category,
-    title: question.title,
-    link: question.link,
-    description: question.description,
-    answer: question.answer,
-    points: question.points,
-    year: question.year || ''
+    category: category || '',
+    title: question?.title || '',
+    link: question?.link || '',
+    description: question?.description || '',
+    answer: question?.answer || '',
+    points: question?.points || question?.point || '',
+    year: question?.year || ''
   });
 
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch categories from backend
+  // Fetch categories from backend and ensure we have full question details
   useEffect(() => {
-    const fetchCategories = async () => {
+    let mounted = true;
+
+    const fetchInitial = async () => {
       try {
         const res = await getCategoriesAdmin();
-        if (res && res.data) {
-          setCategories(res.data);
-          if (!formData.category) {
-            setFormData(prev => ({ ...prev, category: res.data[0]?.name || '' }));
+        const cats = (res && (res.data || res)) || [];
+        if (!mounted) return;
+        setCategories(cats);
+        // If category missing, default to first
+        setFormData(prev => ({ ...prev, category: prev.category || cats[0]?.name || '' }));
+
+        // If question object seems incomplete, try fetching full details by id
+        if (question && (!question.description || question.answer === undefined || question.link === undefined)) {
+          try {
+            const detailRes = await fetchQuestionDetails(question._id || question.question_id || question.id);
+            const q = detailRes?.data || detailRes || {};
+            if (!mounted) return;
+            setFormData({
+              category: q.category || q.categoryName || prev.category || cats[0]?.name || '',
+              title: q.title || '',
+              link: q.link || '',
+              description: q.description || '',
+              answer: q.answer || '',
+              points: q.points || q.point || '',
+              year: q.year || ''
+            });
+          } catch (err) {
+            // if fetchQuestionDetails fails, fall back to provided question
+            console.warn('Could not fetch full question details, using provided data', err);
           }
         }
       } catch (err) {
         console.error('Failed to fetch categories:', err);
       }
     };
-    fetchCategories();
+
+    fetchInitial();
+
+    return () => { mounted = false; };
   }, []);
 
   const handleInputChange = (e) => {
@@ -53,14 +78,14 @@ function EditQuestion({ category, question, onBack }) {
       const payload = {
         category: formData.category,
         title: formData.title,
-        link: formData.link,
-        description: formData.description,
-        answer: formData.answer,
-        point: Number(formData.points),
-        year: Number(formData.year)
+        link: formData.link || '',
+        description: formData.description || '',
+        answer: formData.answer || '',
+        point: Number(formData.points || 0),
+        year: Number(formData.year || 0)
       };
 
-      const res = await updateQuestionAdmin(question._id, payload);
+      const res = await updateQuestionAdmin(question._id || question.question_id || question.id, payload);
 
       if (res && (res.statusCode === 200 || res.success)) {
         setStatus('Question updated successfully!');

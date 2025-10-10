@@ -1,65 +1,47 @@
-import { useState } from 'react';
-import { updateCategoryAdmin } from '../../api.js';
+import { useEffect, useState } from 'react';
+import { deleteCategoryAdmin } from '../../api.js';
 
-function EditCategory({ category, onBack }) {
-	const [categoryName, setCategoryName] = useState(category?.name || '');
-	const [status, setStatus] = useState('');
-	const [error, setError] = useState('');
+function CategoriesPage({ categories: initial = [], onEditCategory, refreshData }) {
+  const [categories, setCategories] = useState(initial || []);
+  const [loading, setLoading] = useState(false);
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setError('');
-		setStatus('');
+  useEffect(() => {
+    setCategories(initial || []);
+  }, [initial]);
 
-		if (!categoryName.trim()) {
-			setError('Category name cannot be empty');
-			return;
-		}
+  const handleDelete = async (cat) => {
+    if (!cat?._id) return;
+    if (!window.confirm(`Delete category "${cat.name}"?`)) return;
+    try {
+      setLoading(true);
+      await deleteCategoryAdmin(cat._id);
+      if (refreshData) await refreshData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete category');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-		try {
-			const res = await updateCategoryAdmin(category._id, { name: categoryName.trim() });
-
-			// Backend response follows ApiResponse pattern
-			if (res?.statusCode === 200 && res?.data) {
-				setStatus('Category updated successfully!');
-				setTimeout(() => onBack(), 1200);
-			} else {
-				setError(res?.message || 'Failed to update category');
-			}
-		} catch (err) {
-			setError(err.response?.data?.message || 'Failed to update category');
-		}
-	};
-
-	return (
-		<div className="edit-category-page">
-			<button className="back-button" onClick={onBack}>
-				← <span>Back</span>
-			</button>
-
-			<h1>Edit Category</h1>
-
-			<form className="form" onSubmit={handleSubmit}>
-				<div className="form-group">
-					<label htmlFor="categoryName">Category Name</label>
-					<input
-						type="text"
-						id="categoryName"
-						className="input"
-						value={categoryName}
-						onChange={(e) => setCategoryName(e.target.value)}
-						placeholder="Enter category name"
-						required
-					/>
-				</div>
-
-				<button type="submit" className="btn-primary">Update Category</button>
-			</form>
-
-			{status && <div style={{ color: 'green', marginTop: '10px' }}>{status}</div>}
-			{error && <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>}
-		</div>
-	);
+  return (
+    <div className="categories-page">
+      <h1>Categories</h1>
+      <div className="categories-list">
+        {categories.length === 0 && <p style={{ color: '#999' }}>No categories found.</p>}
+        {categories.map(cat => (
+          <div key={cat._id} className="list-item">
+            <span className="item-text">{cat.name}</span>
+            <div className="item-actions">
+              <button className="icon-btn edit-btn" onClick={() => onEditCategory(cat)} title="Edit">✏️</button>
+              <button className="icon-btn delete-btn" onClick={() => handleDelete(cat)} title="Delete">🗑️</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {loading && <div style={{ color: '#666', marginTop: 8 }}>Processing...</div>}
+    </div>
+  );
 }
 
-export default EditCategory;
+export default CategoriesPage;
+
