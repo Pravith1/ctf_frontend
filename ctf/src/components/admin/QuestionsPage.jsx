@@ -9,20 +9,21 @@ function QuestionsPage() {
 		link: '',
 		description: '',
 		answer: '',
-		points: '',
-		year: new Date().getFullYear()
+		point: '',
+		year: new Date().getFullYear(),
+		difficulty: 'beginner'
 	});
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState('');
-	const [error, setError] = useState(null);
+	const [error, setError] = useState('');
 
 	// Fetch categories from backend
 	const fetchCategories = async () => {
 		try {
-			const data = await getCategoriesAdmin();
-			if (data && data.data) {
-				setCategories(data.data);
-				setFormData(prev => ({ ...prev, category: data.data[0]?.name || '' }));
+			const res = await getCategoriesAdmin();
+			if (res?.data) {
+				setCategories(res.data);
+				setFormData(prev => ({ ...prev, category: res.data[0]?.name || '' }));
 			}
 		} catch (err) {
 			console.error(err);
@@ -42,40 +43,47 @@ function QuestionsPage() {
 	const handleCreate = async (e) => {
 		e.preventDefault();
 		setStatus('');
-		setError(null);
+		setError('');
 
-		if (!formData.category || !formData.title || !formData.description || !formData.answer || !formData.points || !formData.year) {
-			setError('All fields are required');
+		const { category, title, description, answer, point, year, difficulty } = formData;
+		if (!category || !title || !description || !answer || !point || !year || !difficulty) {
+			setError('All fields except link are required');
 			return;
 		}
 
 		const payload = {
-			category: formData.category,
-			title: formData.title,
-			description: formData.description,
-			answer: formData.answer,
-			point: Number(formData.points),
+			category, // category name
+			title,
+			description,
+			answer,
+			point: Number(point),
 			link: formData.link || '',
-			year: Number(formData.year)
+			year: Number(year),
+			difficulty
 		};
 
 		try {
 			setLoading(true);
 			const res = await createQuestionAdmin(payload);
 
-			if (res && (res.statusCode === 201 || res.success)) {
+			if (res?.status === 201 || res?.data?.statusCode === 201) {
 				setStatus('Question created successfully!');
-				setFormData(prev => ({ ...prev, title: '', link: '', description: '', answer: '', points: '', year: new Date().getFullYear() }));
+				setFormData({
+					category: categories[0]?.name || '',
+					title: '',
+					link: '',
+					description: '',
+					answer: '',
+					point: '',
+					year: new Date().getFullYear(),
+					difficulty: 'beginner'
+				});
 			} else {
-				setError(res.message || 'Failed to create question');
+				setError(res?.data?.message || 'Failed to create question');
 			}
 		} catch (err) {
 			console.error(err);
-			let msg = 'Failed to create question';
-			if (err.response && err.response.data && err.response.data.message) {
-				msg = err.response.data.message;
-			}
-			setError(msg);
+			setError(err.response?.data?.message || 'Failed to create question');
 		} finally {
 			setLoading(false);
 		}
@@ -86,6 +94,7 @@ function QuestionsPage() {
 			<h1>Questions</h1>
 
 			<form className="form" onSubmit={handleCreate}>
+				{/* CATEGORY */}
 				<div className="form-group">
 					<label htmlFor="category">Category</label>
 					<select
@@ -104,6 +113,23 @@ function QuestionsPage() {
 					</select>
 				</div>
 
+				{/* DIFFICULTY */}
+				<div className="form-group">
+					<label htmlFor="difficulty">Difficulty</label>
+					<select
+						id="difficulty"
+						name="difficulty"
+						className="dropdown"
+						value={formData.difficulty}
+						onChange={handleInputChange}
+						disabled={loading}
+					>
+						<option value="beginner">Beginner</option>
+						<option value="intermediate">Intermediate</option>
+					</select>
+				</div>
+
+				{/* TITLE */}
 				<div className="form-group">
 					<label htmlFor="title">Title</label>
 					<input
@@ -118,6 +144,7 @@ function QuestionsPage() {
 					/>
 				</div>
 
+				{/* LINK */}
 				<div className="form-group">
 					<label htmlFor="link">Link</label>
 					<input
@@ -127,11 +154,12 @@ function QuestionsPage() {
 						className="input"
 						value={formData.link}
 						onChange={handleInputChange}
-						placeholder="Enter link"
+						placeholder="Optional link"
 						disabled={loading}
 					/>
 				</div>
 
+				{/* DESCRIPTION */}
 				<div className="form-group">
 					<label htmlFor="description">Description</label>
 					<textarea
@@ -146,6 +174,7 @@ function QuestionsPage() {
 					/>
 				</div>
 
+				{/* ANSWER */}
 				<div className="form-group">
 					<label htmlFor="answer">Answer</label>
 					<input
@@ -155,25 +184,27 @@ function QuestionsPage() {
 						className="input"
 						value={formData.answer}
 						onChange={handleInputChange}
-						placeholder="Enter answer"
+						placeholder="Enter correct answer"
 						disabled={loading}
 					/>
 				</div>
 
+				{/* POINTS */}
 				<div className="form-group">
-					<label htmlFor="points">Points</label>
+					<label htmlFor="point">Points</label>
 					<input
 						type="number"
-						id="points"
-						name="points"
+						id="point"
+						name="point"
 						className="input"
-						value={formData.points}
+						value={formData.point}
 						onChange={handleInputChange}
 						placeholder="Enter points"
 						disabled={loading}
 					/>
 				</div>
 
+				{/* YEAR */}
 				<div className="form-group">
 					<label htmlFor="year">Year</label>
 					<input
@@ -189,7 +220,7 @@ function QuestionsPage() {
 				</div>
 
 				<button type="submit" className="btn-primary" disabled={loading}>
-					{loading ? 'Processing...' : 'Create'}
+					{loading ? 'Processing...' : 'Create Question'}
 				</button>
 			</form>
 

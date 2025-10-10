@@ -5,7 +5,7 @@ import "./LoginPage.css"
 
 export default function ArenaLogin() {
 	const navigate = useNavigate();
-	const { login, signup } = useAuth();
+	const { login, signup, setUser } = useAuth(); // ensure setUser exists in context
 	const [isLogin, setIsLogin] = useState(true);
 	const [formData, setFormData] = useState({
 		team_name: '',
@@ -14,8 +14,8 @@ export default function ArenaLogin() {
 		confirmPassword: '',
 		year: ''
 	});
-	const [isHovered, setIsHovered] = useState(false);
 	const [error, setError] = useState('');
+	const [isHovered, setIsHovered] = useState(false);
 
 	const handleInputChange = (e) => {
 		setFormData({
@@ -26,33 +26,46 @@ export default function ArenaLogin() {
 
 	const handleSubmit = async () => {
 		setError('');
-		
+
 		if (isLogin) {
-			// Login logic - backend expects: { team_name, password }
 			if (!formData.team_name || !formData.password) {
 				setError('Please enter team name and password');
 				return;
 			}
 
-			const result = await login({ 
-				team_name: formData.team_name, 
-				password: formData.password 
-			});
+			try {
+				const result = await login({
+					team_name: formData.team_name,
+					password: formData.password
+				});
 
-			if (result.success) {
-				// Redirect based on user field
-				navigate(result.user.field === 'admin' ? '/admin' : '/leaderboard');
-			} else {
-				setError(result.message || 'Login failed');
+				if (result?.success) {
+					// persist login info
+					localStorage.setItem('user', JSON.stringify(result.user));
+					localStorage.setItem('token', result.token || '');
+
+					setUser(result.user); // update context
+
+					// Navigate after small delay to ensure context updates
+					setTimeout(() => {
+						if (result.user.field === 'admin') {
+							navigate('/admin');
+						} else {
+							navigate('/leaderboard');
+						}
+					}, 100);
+				} else {
+					setError(result.message || 'Login failed');
+				}
+			} catch (err) {
+				setError('Login failed. Please try again.');
 			}
 		} else {
-			// Signup logic - backend expects: { email, team_name, password, year }
 			if (!formData.email || !formData.team_name || !formData.password || !formData.confirmPassword || !formData.year) {
 				setError('Please fill all fields');
 				return;
 			}
 
-			// Validate email domain
 			if (!formData.email.endsWith('@psgtech.ac.in')) {
 				setError('Please use your official PSG Tech email (@psgtech.ac.in)');
 				return;
@@ -70,7 +83,10 @@ export default function ArenaLogin() {
 				year: parseInt(formData.year)
 			});
 
-			if (result.success) {
+			if (result?.success) {
+				localStorage.setItem('user', JSON.stringify(result.user));
+				localStorage.setItem('token', result.token || '');
+				setUser(result.user);
 				navigate('/leaderboard');
 			} else {
 				setError(result.message || 'Registration failed');
@@ -107,96 +123,92 @@ export default function ArenaLogin() {
 					</div>
 				)}
 
-				<div>
-					{/* Team Name */}
+				{/* Team Name */}
+				<div className="form-group">
+					<label className="form-label">Team Name</label>
+					<input
+						type="text"
+						name="team_name"
+						value={formData.team_name}
+						onChange={handleInputChange}
+						placeholder="your_team_name"
+						className="form-input"
+					/>
+				</div>
+
+				{/* Email only for signup */}
+				{!isLogin && (
 					<div className="form-group">
-						<label className="form-label">Team Name</label>
+						<label className="form-label">Email (@psgtech.ac.in)</label>
 						<input
-							type="text"
-							name="team_name"
-							value={formData.team_name}
+							type="email"
+							name="email"
+							value={formData.email}
 							onChange={handleInputChange}
-							placeholder="your_team_name"
+							placeholder="your.email@psgtech.ac.in"
 							className="form-input"
 						/>
 					</div>
+				)}
 
-					{/* Email only for signup */}
-					{!isLogin && (
-						<div className="form-group">
-							<label className="form-label">Email (@psgtech.ac.in)</label>
-							<input
-								type="email"
-								name="email"
-								value={formData.email}
-								onChange={handleInputChange}
-								placeholder="your.email@psgtech.ac.in"
-								className="form-input"
-							/>
-						</div>
-					)}
-
-					{/* Year only for signup */}
-					{!isLogin && (
-						<div className="form-group">
-							<label className="form-label">Year</label>
-							<select
-								name="year"
-								value={formData.year}
-								onChange={handleInputChange}
-								className="form-input"
-								style={{ cursor: 'pointer' }}
-							>
-								<option value="">Select Year</option>
-								<option value="1">1st Year</option>
-								<option value="2">2nd Year</option>
-								<option value="3">3rd Year</option>
-								<option value="4">4th Year</option>
-							</select>
-						</div>
-					)}
-
-					{/* Password */}
+				{/* Year only for signup */}
+				{!isLogin && (
 					<div className="form-group">
-						<label className="form-label">Password</label>
+						<label className="form-label">Year</label>
+						<select
+							name="year"
+							value={formData.year}
+							onChange={handleInputChange}
+							className="form-input"
+							style={{ cursor: 'pointer' }}
+						>
+							<option value="">Select Year</option>
+							<option value="1">1st Year</option>
+							<option value="2">2nd Year</option>
+							<option value="3">3rd Year</option>
+							<option value="4">4th Year</option>
+						</select>
+					</div>
+				)}
+
+				{/* Password */}
+				<div className="form-group">
+					<label className="form-label">Password</label>
+					<input
+						type="password"
+						name="password"
+						value={formData.password}
+						onChange={handleInputChange}
+						placeholder="••••••••"
+						className="form-input"
+					/>
+				</div>
+
+				{/* Confirm Password for register */}
+				{!isLogin && (
+					<div className="form-group">
+						<label className="form-label">Confirm Password</label>
 						<input
 							type="password"
-							name="password"
-							value={formData.password}
+							name="confirmPassword"
+							value={formData.confirmPassword}
 							onChange={handleInputChange}
 							placeholder="••••••••"
 							className="form-input"
 						/>
 					</div>
+				)}
 
-					{/* Confirm Password for register */}
-					{!isLogin && (
-						<div className="form-group">
-							<label className="form-label">Confirm Password</label>
-							<input
-								type="password"
-								name="confirmPassword"
-								value={formData.confirmPassword}
-								onChange={handleInputChange}
-								placeholder="••••••••"
-								className="form-input"
-							/>
-						</div>
-					)}
+				<button onClick={handleSubmit} className="sign-in-btn">
+					{isLogin ? 'Sign In' : 'Create Account'}
+				</button>
 
-					{/* Submit Button */}
-					<button onClick={handleSubmit} className="sign-in-btn">
-						{isLogin ? 'Sign In' : 'Create Account'}
-					</button>
-
-					{/* Toggle Login/Register */}
-					<p className="register-text">
-						{isLogin ? "Don't have an account yet? " : "Already have an account? "}
-						<span className="register-link" onClick={toggleMode}>
-							{isLogin ? 'Register for free' : 'Sign in here'}
-						</span>
-					</p>
-				</div>
+				<p className="register-text">
+					{isLogin ? "Don't have an account yet? " : "Already have an account? "}
+					<span className="register-link" onClick={toggleMode}>
+						{isLogin ? 'Register for free' : 'Sign in here'}
+					</span>
+				</p>
 			</div>
 		</div>
 	);

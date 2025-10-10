@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { updateCategoryAdmin } from '../../api.js';
 
 function EditCategory({ category, onBack }) {
-	const [categoryName, setCategoryName] = useState(category.name);
+	const [categoryName, setCategoryName] = useState(category?.name || '');
 	const [status, setStatus] = useState('');
 	const [error, setError] = useState('');
 
@@ -18,11 +18,13 @@ function EditCategory({ category, onBack }) {
 
 		try {
 			const res = await updateCategoryAdmin(category._id, { name: categoryName.trim() });
-			if (res && (res.statusCode === 200 || res.success)) {
+
+			// Backend response follows ApiResponse pattern
+			if (res?.statusCode === 200 && res?.data) {
 				setStatus('Category updated successfully!');
-				setTimeout(() => onBack(), 1500);
+				setTimeout(() => onBack(), 1200);
 			} else {
-				setError(res.message || 'Failed to update category');
+				setError(res?.message || 'Failed to update category');
 			}
 		} catch (err) {
 			setError(err.response?.data?.message || 'Failed to update category');
@@ -32,7 +34,7 @@ function EditCategory({ category, onBack }) {
 	return (
 		<div className="edit-category-page">
 			<button className="back-button" onClick={onBack}>
-				← <span>Back to Overview</span>
+				← <span>Back</span>
 			</button>
 
 			<h1>Edit Category</h1>
@@ -51,9 +53,7 @@ function EditCategory({ category, onBack }) {
 					/>
 				</div>
 
-				<button type="submit" className="btn-primary">
-					Update Category
-				</button>
+				<button type="submit" className="btn-primary">Update Category</button>
 			</form>
 
 			{status && <div style={{ color: 'green', marginTop: '10px' }}>{status}</div>}
