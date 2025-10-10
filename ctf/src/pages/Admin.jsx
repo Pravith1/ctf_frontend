@@ -47,22 +47,27 @@ function Admin() {
 		return () => { mounted = false; };
 	}, [navigate]);
 
-	// Fetch categories and questions
 	const fetchData = async () => {
-		try {
-			setLoading(true);
-			const [cats, ques] = await Promise.all([
-				getCategoriesAdmin(),
-				getQuestionsAdmin()
-			]);
-			setCategories(cats);
-			setQuestions(ques);
-		} catch (err) {
-			console.error('Failed to load admin data:', err);
-		} finally {
-			setLoading(false);
-		}
-	};
+	try {
+		setLoading(true);
+		const [cats, ques] = await Promise.all([
+			getCategoriesAdmin(),
+			getQuestionsAdmin()
+		]);
+
+		console.log('Fetched categories:', cats);
+		console.log('Fetched questions:', ques);
+
+		// ✅ Extract .data property safely
+		setCategories(Array.isArray(cats?.data) ? cats.data : []);
+		setQuestions(Array.isArray(ques?.data) ? ques.data : []);
+	} catch (err) {
+		console.error('Failed to load admin data:', err);
+	} finally {
+		setLoading(false);
+	}
+};
+
 
 	// Note: fetchData is called after admin verification above.
 

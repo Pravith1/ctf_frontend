@@ -65,8 +65,7 @@ function QuestionsPage() {
 		try {
 			setLoading(true);
 			const res = await createQuestionAdmin(payload);
-
-			if (res?.status === 201 || res?.data?.statusCode === 201) {
+			if (res?.status === 201 || res?.statusCode === 201) {
 				setStatus('Question created successfully!');
 				setFormData({
 					category: categories[0]?.name || '',
