@@ -3,68 +3,53 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { checkIsAdmin } from '../api.js';
 
+// Minimal ProtectedRoute: when adminOnly is true, call /admin/isAdmin once and allow access only
+// if the backend returns { flag: true }. Otherwise redirect to /challenge. Authentication is
+// still based on AuthContext's user presence.
 export default function ProtectedRoute({ children, adminOnly = false }) {
   const { isAuthenticated, isLoading } = useAuth();
-  const [adminCheckLoading, setAdminCheckLoading] = useState(false);
-  const [isAdminVerified, setIsAdminVerified] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
 
-  // Verify admin status from backend ONLY when adminOnly route
   useEffect(() => {
-    if (adminOnly && isAuthenticated()) {
-      setAdminCheckLoading(true);
-      const verifyAdmin = async () => {
-        try {
-          const response = await checkIsAdmin();
-          // Backend returns: { flag: true } or { flag: false }
-          setIsAdminVerified(response.flag === true);
-        } catch (error) {
-          console.error('Admin verification failed:', error);
-          // Don't clear cookies - just treat as non-admin
-          setIsAdminVerified(false);
-        } finally {
-          setAdminCheckLoading(false);
-        }
-      };
-      verifyAdmin();
+    let mounted = true;
+
+    // Only check when route is adminOnly and user is authenticated
+    if (adminOnly && isAuthenticated() && !adminChecked) {
+      setIsCheckingAdmin(true);
+      checkIsAdmin()
+        .then((res) => {
+          if (!mounted) return;
+          setIsAdmin(res.flag === true);
+          setAdminChecked(true);
+        })
+        .catch((err) => {
+          if (!mounted) return;
+          console.error('Admin check failed:', err.response?.data || err.message);
+          setIsAdmin(false);
+          setAdminChecked(true);
+        })
+        .finally(() => {
+          if (mounted) setIsCheckingAdmin(false);
+        });
     }
-  }, [adminOnly, isAuthenticated]);
 
-  // Show loading state while checking authentication
-  if (isLoading || adminCheckLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        background: '#0f0f0f',
-        color: '#fff'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            fontSize: '48px', 
-            marginBottom: '16px',
-            animation: 'spin 1s linear infinite' 
-          }}>
-            🔒
-          </div>
-          <p>{adminCheckLoading ? 'Verifying admin access...' : 'Loading...'}</p>
-        </div>
-      </div>
-    );
+    return () => { mounted = false; };
+  }, [adminOnly, isAuthenticated, adminChecked]);
+
+  // Show initial loading
+  if (isLoading) return <div style={{minHeight: '100vh'}}>Loading...</div>;
+
+  // If not authenticated, send to login
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
+
+  // If admin route, wait for check
+  if (adminOnly) {
+    if (isCheckingAdmin) return <div style={{minHeight: '100vh'}}>Verifying admin access...</div>;
+    if (!adminChecked) return <div style={{minHeight: '100vh'}}>Verifying admin access...</div>;
+    if (!isAdmin) return <Navigate to="/challenge" replace />;
   }
 
-  // Check if user is authenticated
-  if (!isAuthenticated()) {
-    return <Navigate to="/" replace />;
-  }
-
-  // Check if route requires admin access
-  if (adminOnly && !isAdminVerified) {
-    // Redirect non-admin users to challenges page (keep cookies intact)
-    return <Navigate to="/challenge" replace />;
-  }
-
-  // User is authenticated (and admin if required), render the protected content
   return children;
 }

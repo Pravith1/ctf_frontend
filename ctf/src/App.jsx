@@ -25,8 +25,17 @@ function App() {
 					)
 					}/>
 
-			{/* Dedicated login route */}
-			<Route path="/login" element={<ArenaLogin />} />
+			{/* Dedicated login route - redirect if already authenticated */}
+			<Route 
+				path="/login" 
+				element={
+					isAuthenticated() ? (
+						isAdmin() ? <Navigate to="/admin" replace /> : <Navigate to="/challenge" replace />
+					) : (
+						<ArenaLogin />
+					)
+				} 
+			/>
 
 			{/* User routes */}
 			<Route

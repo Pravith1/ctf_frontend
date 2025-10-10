@@ -115,7 +115,7 @@ function ViewPage() {
 		return (
 			<EditQuestion
 				category={editingQuestion.category}
-				question={editingQuestion}
+				question={editingQuestion.question}
 				onBack={() => {
 					setEditingQuestion(null);
 					refreshData();
@@ -178,7 +178,7 @@ function ViewPage() {
 									className="icon-btn edit-btn"
 									onClick={() => setEditingQuestion({
 										category: selectedCategory,
-										...question
+										question: question
 									})}
 									title="Edit"
 								>

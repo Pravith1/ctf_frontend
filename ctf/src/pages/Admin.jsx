@@ -4,7 +4,7 @@ import Footer from '../components/layout/Footer';
 import Sidebar from '../components/admin/Sidebar';
 import MainContent from '../components/admin/MainContent';
 import '../App.css';
-import { getCategoriesAdmin, getQuestionsAdmin } from '../api.js';
+import { getCategoriesAdmin, getQuestionsAdmin, checkIsAdmin } from '../api.js';
 import { useNavigate } from 'react-router-dom';
 
 function Admin() {
@@ -17,12 +17,34 @@ function Admin() {
 	const scrollPositionRef = useRef(0);
 	const navigate = useNavigate();
 
-	// Redirect if not admin
+	// Verify admin status with backend, then fetch data if allowed
 	useEffect(() => {
-		const user = JSON.parse(localStorage.getItem('user'));
-		if (!user || !user.isAdmin) {
-			navigate('/login'); 
-		}
+		let mounted = true;
+
+		const verify = async () => {
+			try {
+				setLoading(true);
+				const res = await checkIsAdmin();
+				// Expect response shape: { flag: true } when admin
+				if (!mounted) return;
+				if (!res || !res.flag) {
+					// Not an admin - redirect to login
+					navigate('/login');
+					return;
+				}
+				// user is admin, fetch data
+				await fetchData();
+			} catch (err) {
+				console.error('Admin verification failed:', err);
+				navigate('/login');
+			} finally {
+				if (mounted) setLoading(false);
+			}
+		};
+
+		verify();
+
+		return () => { mounted = false; };
 	}, [navigate]);
 
 	// Fetch categories and questions
@@ -42,9 +64,7 @@ function Admin() {
 		}
 	};
 
-	useEffect(() => {
-		fetchData();
-	}, []);
+	// Note: fetchData is called after admin verification above.
 
 	const handleEditCategory = (category) => {
 		const mainContent = document.querySelector('.main-content');

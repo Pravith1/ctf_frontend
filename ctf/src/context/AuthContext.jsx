@@ -10,7 +10,12 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is logged in on mount
   useEffect(() => {
+    console.log('🔄 AuthContext initializing...');
     const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    
+    console.log('💾 Stored user:', storedUser);
+    console.log('🔑 Stored token:', storedToken ? 'Present' : 'Missing');
     
     if (storedUser) {
       try {
@@ -18,24 +23,34 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         // Set admin status from user field (fallback until backend endpoint is ready)
         setIsAdminUser(userData.field === 'admin');
+        console.log('✅ User restored from localStorage:', userData);
       } catch (error) {
-        console.error('Error parsing stored user:', error);
+        console.error('❌ Error parsing stored user:', error);
         localStorage.removeItem('user');
       }
+    } else {
+      console.log('⚠️ No user in localStorage');
     }
     setIsLoading(false);
   }, []);
 
-  // Check admin status from backend (optional - only if endpoint exists)
+  // Check admin status from backend
   const checkAdminStatus = async () => {
     try {
       const response = await api.checkIsAdmin();
+      console.log('🔐 Admin check response:', response);
       // Backend returns: { flag: true/false }
-      setIsAdminUser(response.flag === true);
+      const isAdmin = response.flag === true;
+      setIsAdminUser(isAdmin);
+      console.log('✅ Admin status:', isAdmin);
+      return isAdmin;
     } catch (error) {
-      // If endpoint doesn't exist (404), fall back to field check
-      console.log('Admin endpoint not available, using field check');
-      setIsAdminUser(user?.field === 'admin');
+      console.error('❌ Admin check failed:', error.response?.data);
+      // Fallback to field check from user data
+      const isAdmin = user?.field === 'admin';
+      setIsAdminUser(isAdmin);
+      console.log('⚠️ Using fallback admin check from user field:', isAdmin);
+      return isAdmin;
     }
   };
 
@@ -44,10 +59,8 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('📝 Attempting signup...');
       const response = await api.signup(signupData);
-      console.log('✅ Signup response:', response);
       
-      // Backend returns: { user: { email, team_name, year, difficulty, field } }
-      // Cookie is set automatically by backend
+      // Backend returns: { user: { email, team_name, year, difficulty, field }, token }
       const userData = {
         email: response.user.email,
         team_name: response.user.team_name,
@@ -56,19 +69,19 @@ export const AuthProvider = ({ children }) => {
         field: response.user.field
       };
       
+      // Store token and user data
+      localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       
       // Set admin status based on field
       setIsAdminUser(userData.field === 'admin');
       
-      console.log('✅ User signed up successfully:', userData);
-      console.log('🍪 Cookie should be set by backend');
+      console.log('✅ User signed up successfully');
       
       return { success: true, user: userData };
     } catch (error) {
-      console.error('❌ Signup error:', error);
-      console.error('Response data:', error.response?.data);
+      console.error('❌ Signup error:', error.response?.data);
       // Extract backend error message from response
       const message = error.response?.data?.message || error.response?.data?.error || 'Signup failed. Please try again.';
       return { success: false, message };
@@ -80,30 +93,29 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔐 Attempting login...');
       const response = await api.login(credentials);
-      console.log('✅ Login response:', response);
       
-      // Backend returns: { user: { email, team_name, year, field } }
-      // Cookie is set automatically by backend
+      // Backend returns: { user: { email, team_name, year, difficulty, field }, token }
       const userData = {
         email: response.user.email,
         team_name: response.user.team_name,
         year: response.user.year,
+        difficulty: response.user.difficulty,
         field: response.user.field
       };
       
+      // Store token and user data
+      localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       
       // Check admin status from backend
       await checkAdminStatus();
       
-      console.log('✅ User logged in successfully:', userData);
-      console.log('🍪 Cookie should be set by backend');
+      console.log('✅ User logged in successfully');
       
       return { success: true, user: userData };
     } catch (error) {
-      console.error('❌ Login error:', error);
-      console.error('Response data:', error.response?.data);
+      console.error('❌ Login error:', error.response?.data);
       // Extract backend error message from response
       const message = error.response?.data?.message || error.response?.data?.error || 'Login failed. Please try again.';
       return { success: false, message };
@@ -113,21 +125,27 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      console.log('🚪 Attempting logout...');
+      console.log('🚪 Logging out...');
       await api.logout();
-      console.log('✅ Logout API call successful');
+      
+      // Clear token and user data
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
       setIsAdminUser(false);
-      console.log('✅ User logged out, localStorage cleared');
+      
+      console.log('✅ Logged out successfully');
       return { success: true };
     } catch (error) {
-      console.error('❌ Logout error:', error);
+      console.error('❌ Logout error:', error.response?.data);
+      
       // Even if API call fails, clear local state
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
       setIsAdminUser(false);
-      console.log('⚠️ Forced logout - cleared local state despite API error');
+      
+      console.log('⚠️ Forced local logout');
       return { success: false, message: error.message };
     }
   };

@@ -1,25 +1,45 @@
 import axios from 'axios';
 
-// Use hosted backend URL or fallback to Vite env or localhost
-const BASE_URL ='http://localhost:5000';
+// Use BACKEND_URL from .env file (accessed via Vite's import.meta.env)
+// Default to Render backend if not set
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://ctf-backend-1.onrender.com';
+
+console.log('🌐 Backend URL:', BASE_URL);
+console.log('🔧 Using proxy:', BASE_URL.startsWith('/'));
+
+// Diagnostic function - call window.checkAuth() in console to debug
+window.checkAuth = () => {
+  console.group('🔍 Auth Diagnostic Check');
+  console.log('🔑 Token present:', !!localStorage.getItem('token'));
+  console.log('💾 User data:', localStorage.getItem('user'));
+  console.log('🌐 Backend URL:', BASE_URL);
+  console.log('📍 Current path:', window.location.pathname);
+  console.groupEnd();
+};
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // CRITICAL: Send cookies with requests
+  withCredentials: true, // Keep for CORS compatibility
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Request interceptor for debugging
+// Add token to requests if available
 api.interceptors.request.use(
   (config) => {
-    console.log(`📤 ${config.method.toUpperCase()} ${config.url}`);
-    console.log('🍪 Cookies being sent:', document.cookie || 'No cookies found');
-    console.log('📋 Request config:', {
-      withCredentials: config.withCredentials,
-      baseURL: config.baseURL
-    });
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    console.group(`📤 ${config.method.toUpperCase()} ${config.url}`);
+    console.log('🔗 URL:', config.baseURL + config.url);
+    console.log('🔑 Auth:', token ? 'Bearer token present' : 'No token');
+    if (config.data) {
+      console.log('📦 Data:', config.data);
+    }
+    console.groupEnd();
     return config;
   },
   (error) => {
@@ -31,31 +51,41 @@ api.interceptors.request.use(
 // Central response handler
 api.interceptors.response.use(
   (res) => {
-    console.log(`📥 Response from ${res.config.url}:`, res.status);
-    console.log('✅ Response headers:', res.headers);
-    if (res.headers['set-cookie']) {
-      console.log('🍪 Backend set cookie:', res.headers['set-cookie']);
-    }
+    console.group(`📥 Response from ${res.config.url}`);
+    console.log('✅ Status:', res.status);
+    console.log('📦 Data:', res.data);
+    console.groupEnd();
     return res;
   },
   (err) => {
-    console.error(`❌ Error from ${err.config?.url}:`, err.response?.status, err.response?.data);
-    console.error('🍪 Current cookies:', document.cookie || 'No cookies');
+    console.group(`❌ Error from ${err.config?.url || 'unknown'}`);
+    console.error('Status:', err.response?.status);
+    console.error('Message:', err.response?.data?.message || err.response?.data?.error);
+    console.error('Data:', err.response?.data);
     
     // Handle 401 Unauthorized errors
     if (err.response?.status === 401) {
-      const currentPath = window.location.pathname;
-      console.warn('⚠️ 401 Unauthorized - JWT Cookie is missing or invalid!');
-      console.error('💥 THIS IS WHY YOUR COOKIE IS "CLEARED" - Backend rejected it!');
-      console.error('🔧 Backend needs to fix cookie configuration (sameSite, secure, path)');
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Unauthorized';
       
-      // Only redirect to login if not already on login page
-      if (currentPath !== '/' && currentPath !== '/login') {
-        console.log('🔄 Redirecting to login page...');
-        localStorage.removeItem('user');
-        window.location.href = '/';
+      // Don't redirect if it's a login/signup request failing (wrong credentials)
+      const isAuthEndpoint = err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/signup');
+      
+      if (isAuthEndpoint) {
+        console.error('⚠️ Authentication failed - check credentials');
+      } else {
+        console.error('⚠️ Token is invalid or expired - redirecting to login');
+        
+        const currentPath = window.location.pathname;
+        // Only redirect to login if not already on login page
+        if (currentPath !== '/' && currentPath !== '/login') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/';
+        }
       }
     }
+    
+    console.groupEnd();
     return Promise.reject(err);
   }
 );
@@ -68,7 +98,6 @@ export const signup = async (payload) => {
 
 export const login = async (payload) => {
   const res = await api.post('/auth/login', payload);
-  console.log(res.data);
   return res.data;
 };
 
