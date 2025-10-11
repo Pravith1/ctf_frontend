@@ -1,47 +1,75 @@
-import { useEffect, useState } from 'react';
-import { deleteCategoryAdmin } from '../../api.js';
+import { useState } from 'react';
+import { createCategoryAdmin } from '../../api.js';
 
-function CategoriesPage({ categories: initial = [], onEditCategory, refreshData }) {
-  const [categories, setCategories] = useState(initial || []);
-  const [loading, setLoading] = useState(false);
+function CategoriesPage({ refreshData }) {
+	const [categoryName, setCategoryName] = useState('');
+	const [loading, setLoading] = useState(false);
+	const [status, setStatus] = useState('');
+	const [error, setError] = useState('');
 
-  useEffect(() => {
-    setCategories(initial || []);
-  }, [initial]);
+	const handleCreate = async (e) => {
+		e.preventDefault();
+		setStatus('');
+		setError('');
 
-  const handleDelete = async (cat) => {
-    if (!cat?._id) return;
-    if (!window.confirm(`Delete category "${cat.name}"?`)) return;
-    try {
-      setLoading(true);
-      await deleteCategoryAdmin(cat._id);
-      if (refreshData) await refreshData();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete category');
-    } finally {
-      setLoading(false);
-    }
-  };
+		if (!categoryName.trim()) {
+			setError('Please enter a category name');
+			return;
+		}
 
-  return (
-    <div className="categories-page">
-      <h1>Categories</h1>
-      <div className="categories-list">
-        {categories.length === 0 && <p style={{ color: '#999' }}>No categories found.</p>}
-        {categories.map(cat => (
-          <div key={cat._id} className="list-item">
-            <span className="item-text">{cat.name}</span>
-            <div className="item-actions">
-              <button className="icon-btn edit-btn" onClick={() => onEditCategory(cat)} title="Edit">✏️</button>
-              <button className="icon-btn delete-btn" onClick={() => handleDelete(cat)} title="Delete">🗑️</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      {loading && <div style={{ color: '#666', marginTop: 8 }}>Processing...</div>}
-    </div>
-  );
+		try {
+			setLoading(true);
+			const res = await createCategoryAdmin({ name: categoryName.trim() });
+			
+
+		if (
+			res?.status === 201 || 
+			res?.statusCode === 201 || 
+			res?.success
+		) {
+			setStatus('Category created successfully!');
+		} else {
+			setError(res?.data?.message || 'Cannot create category');
+		}
+
+
+		} catch (err) {
+			console.error(err);
+			setError(err.response?.data?.message || 'Failed to create category');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<div className="categories-page">
+			<h1>Categories</h1>
+
+			<form className="form" onSubmit={handleCreate}>
+				{/* CATEGORY NAME INPUT */}
+				<div className="form-group">
+					<label htmlFor="categoryName">New Category</label>
+					<input
+						type="text"
+						id="categoryName"
+						name="categoryName"
+						className="input"
+						value={categoryName}
+						onChange={(e) => setCategoryName(e.target.value)}
+						placeholder="Enter category name"
+						disabled={loading}
+					/>
+				</div>
+
+				<button type="submit" className="btn-primary" disabled={loading}>
+					{loading ? 'Creating...' : 'Create Category'}
+				</button>
+			</form>
+
+			{error && <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>}
+			{status && <div style={{ color: 'green', marginTop: '10px' }}>{status}</div>}
+		</div>
+	);
 }
 
 export default CategoriesPage;
-
