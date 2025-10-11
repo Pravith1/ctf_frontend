@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import CTFHeader from '../components/layout/CTFHeader';
 import { useAuth } from '../context/AuthContext';
-import { submitAnswer, fetchQuestionDetails, checkQuestionSolved } from '../api';
+import { submitAnswer, fetchQuestionDetails, checkQuestionSolved, fetchLeaderboard } from '../api';
+import { connectLeaderboardSocket, onLeaderboardUpdate, disconnectLeaderboardSocket } from '../leaderboardSocket';
 
 
 export default function AnswerSolving() {
@@ -69,19 +70,44 @@ export default function AnswerSolving() {
     loadQuestionData();
   }, [id, passedChallenge]);
   
-  // Mock top 10 players
-  const top10 = [
-    { rank: 1, name: "natjef20" },
-    { rank: 2, name: "javier" },
-    { rank: 3, name: "drmad" },
-    { rank: 4, name: "limyunkai19" },
-    { rank: 5, name: "sebwit20" },
-    { rank: 6, name: "yukimo" },
-    { rank: 7, name: "teamaardvark" },
-    { rank: 8, name: "witchcraft" },
-    { rank: 9, name: "aiyam" },
-    { rank: 10, name: "blackndoor" },
-  ];
+  const [top10, setTop10] = useState([]);
+
+  // Subscribe to leaderboard updates (top 10)
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    connectLeaderboardSocket(() => {}, { auth: { token } });
+
+    const unsub = onLeaderboardUpdate((payload) => {
+      const list = payload?.top10 || payload?.data || payload || [];
+      const normalized = (Array.isArray(list) ? list : []).slice(0, 10).map((p, idx) => ({
+        rank: p.rank ?? idx + 1,
+        name: p.username || p.name || p.handle || 'unknown',
+        points: p.points ?? p.score ?? 0
+      }));
+      setTop10(normalized);
+    });
+
+    // fetch initial leaderboard once
+    (async () => {
+      try {
+        const res = await fetchLeaderboard();
+        const list = res?.top10 || res?.data || res || [];
+        const normalized = (Array.isArray(list) ? list : []).slice(0, 10).map((p, idx) => ({
+          rank: p.rank ?? idx + 1,
+          name: p.username || p.name || p.handle || 'unknown',
+          points: p.points ?? p.score ?? 0
+        }));
+        setTop10(normalized);
+      } catch (err) {
+        console.warn('Failed to fetch initial leaderboard', err);
+      }
+    })();
+
+    return () => {
+      if (typeof unsub === 'function') unsub();
+      // optional: disconnectLeaderboardSocket(); // keep connection for other pages
+    };
+  }, []);
 
   const handleSubmit = async () => {
     if (isSolved) {
@@ -114,6 +140,19 @@ export default function AnswerSolving() {
         if (response.isCorrect) {
           setFlagInput(''); // Clear input on correct answer
           setIsSolved(true); // Mark as solved
+          // fetch latest leaderboard after a correct submission to get immediate update
+          try {
+            const lb = await fetchLeaderboard();
+            const list = lb?.top10 || lb?.data || lb || [];
+            const normalized = (Array.isArray(list) ? list : []).slice(0, 10).map((p, idx) => ({
+              rank: p.rank ?? idx + 1,
+              name: p.username || p.name || p.handle || 'unknown',
+              points: p.points ?? p.score ?? 0
+            }));
+            setTop10(normalized);
+          } catch (err) {
+            console.warn('Failed to refresh leaderboard after submission', err);
+          }
         }
       } else {
         setSubmitResult({ success: false, message: response.message });

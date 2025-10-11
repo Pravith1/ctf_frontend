@@ -1,38 +1,57 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './scoreboard.css';
 import CTFHeader from '../components/layout/CTFHeader';
+import {
+  connectLeaderboardSocket,
+  onLeaderboardUpdate,
+  disconnectLeaderboardSocket
+} from '../leaderboardSocket';
+import { fetchLeaderboard, fetchLeaderboardByDifficulty } from '../api';
 
 export default function Scoreboard() {
-  // Mock leaderboard data
-  const leaderboard = [
-    { rank: 142334, username: "dany19", country: null, points: 10 },
-    { rank: "🏆", username: "alexanderanchishkin", country: "🇷🇺", points: 12120 },
-    { rank: "🥈", username: "Gelly", country: null, points: 12010 },
-    { rank: "🥉", username: "Lightwood13", country: "🇺🇦", points: 12010 },
-    { rank: 4, username: "Rivit", country: "🇵🇱", points: 11950 },
-    { rank: 5, username: "x3ric", country: "🇮🇹", points: 11380 },
-    { rank: 6, username: "Superior", country: "🇲🇳", points: 11000 },
-    { rank: 7, username: "mrmat15", country: "🇵🇱", points: 10930, verified: true },
-    { rank: 8, username: "drgruff", country: "🇳🇴", points: 10680 },
-    { rank: 9, username: "impulse", country: null, points: 10450 },
-    { rank: 10, username: "bobo1239", country: null, points: 10260 },
-    { rank: 11, username: "agula7171", country: "🇵🇱", points: 10030 },
-    { rank: 12, username: "BlazerKun", country: "🇷🇺", points: 9780 },
-    { rank: 13, username: "ebouteillon", country: "🇫🇷", points: 9740 },
-  ];
+  const [top10, setTop10] = useState([]);
 
-  // Mock recent activity
-  const recentActivity = [
-    { username: "aditya15", action: "solved", challenge: "Gobustme ?", time: "11 minutes ago" },
-    { username: "hyp3", action: "solved", challenge: "WOW.... So Meta", time: "11 minutes ago" },
-    { username: "Shahidan101", action: "solved", challenge: "Adoni Assembler Chall", time: "16 minutes ago" },
-    { username: "sdjnyty", action: "solved", challenge: "07601", time: "16 minutes ago" },
-    { username: "ucup123", action: "solved", challenge: "Basic Injection", time: "20 minutes ago" },
-    { username: "aditya15", action: "solved", challenge: "Basic Injection", time: "21 minutes ago" },
-    { username: "hyp3", action: "rated", challenge: "Forensics 101", rating: "4 stars", time: "23 minutes ago" },
-    { username: "hyp3", action: "solved", challenge: "Forensics 101", time: "24 minutes ago" },
-    { username: "Shahidan101", action: "solved", challenge: "Reykjavik", time: "27 minutes ago" },
-  ];
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    // connect and subscribe
+    connectLeaderboardSocket(() => {}, { auth: { token } });
+
+    const difficulty = 'beginner';
+    // fetch initial leaderboard once
+    (async () => {
+      try {
+        const res = await fetchLeaderboardByDifficulty(difficulty);
+        const list = res?.data || res?.leaderboard || res || [];
+        const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
+          rank: p.rank ?? idx + 1,
+          username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
+          points: p.points ?? p.point ?? p.score ?? 0,
+          verified: p.verified || false
+        }));
+        setTop10(normalized);
+      } catch (err) {
+        console.warn('Failed to fetch initial leaderboard', err);
+      }
+    })();
+
+    const unsubscribe = onLeaderboardUpdate((payload) => {
+      // payload normalized: { difficulty, data, timestamp }
+      if (payload.difficulty !== 'beginner') return; // ignore others for this page
+      const list = payload.data || [];
+      const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
+        rank: p.rank ?? idx + 1,
+        username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
+        points: p.points ?? p.point ?? p.score ?? 0,
+        verified: p.verified || false
+      }));
+      setTop10(normalized);
+    });
+
+    return () => {
+      // unsubscribe only; keep socket for other pages if needed
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
 
   return (
     <div className="scoreboard-page">
@@ -49,7 +68,7 @@ export default function Scoreboard() {
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((player, index) => (
+              {top10.map((player, index) => (
                 <tr key={index} className="leaderboard-row">
                   <td className="td-rank">{player.rank}</td>
                   <td className="td-user">

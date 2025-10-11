@@ -118,6 +118,12 @@ export const fetchLeaderboard = async () => {
   return res.data;
 };
 
+// Fetch leaderboard with difficulty filter, e.g., fetchLeaderboard('beginner')
+export const fetchLeaderboardByDifficulty = async (difficulty) => {
+  const res = await api.get('/leaderboard', { params: { difficulty } });
+  return res.data;
+};
+
 // Submission endpoints
 export const submitAnswer = async ({ question_id, submitted_answer }) => {
   const res = await api.post('/submission', { question_id, submitted_answer });

@@ -10,6 +10,7 @@ function QuestionsPage() {
 		description: '',
 		answer: '',
 		points: '',
+		difficulty: 'medium',
 		year: new Date().getFullYear()
 	});
 	const [loading, setLoading] = useState(false);
@@ -53,6 +54,7 @@ function QuestionsPage() {
 			category: formData.category,
 			title: formData.title,
 			description: formData.description,
+			difficulty: formData.difficulty,
 			answer: formData.answer,
 			point: Number(formData.points),
 			link: formData.link || '',
@@ -105,6 +107,14 @@ function QuestionsPage() {
 				</div>
 
 				<div className="form-group">
+										<label htmlFor="difficulty">Difficulty</label>
+										<select id="difficulty" name="difficulty" className="dropdown" value={formData.difficulty} onChange={handleInputChange} disabled={loading}>
+											<option value="beginner">beginner</option>
+											<option value="intermediate">intermediate</option>
+										</select>
+									</div>
+
+									<div className="form-group">
 					<label htmlFor="title">Title</label>
 					<input
 						type="text"

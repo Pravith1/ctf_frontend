@@ -10,6 +10,7 @@ function EditQuestion({ category, question, onBack }) {
     description: question?.description || '',
     answer: question?.answer || '',
     points: question?.points || question?.point || '',
+    difficulty: question?.difficulty || 'medium',
     year: question?.year || ''
   });
 
@@ -43,6 +44,7 @@ function EditQuestion({ category, question, onBack }) {
               description: q.description || '',
               answer: q.answer || '',
               points: q.points || q.point || '',
+              difficulty: q.difficulty || q.level || 'medium',
               year: q.year || ''
             });
           } catch (err) {
@@ -80,6 +82,7 @@ function EditQuestion({ category, question, onBack }) {
         title: formData.title,
         link: formData.link || '',
         description: formData.description || '',
+        difficulty: formData.difficulty || 'medium',
         answer: formData.answer || '',
         point: Number(formData.points || 0),
         year: Number(formData.year || 0)
