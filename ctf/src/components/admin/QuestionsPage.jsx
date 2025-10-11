@@ -55,12 +55,11 @@ function QuestionsPage() {
 			category, // category name
 			title,
 			description,
-			difficulty: formData.difficulty,
 			answer,
 			point: Number(point),
 			link: formData.link || '',
 			year: Number(year),
-			difficulty
+			difficulty: formData.difficulty
 		};
 
 		try {
@@ -114,15 +113,6 @@ function QuestionsPage() {
 				</div>
 
 				<div className="form-group">
-										<label htmlFor="difficulty">Difficulty</label>
-										<select id="difficulty" name="difficulty" className="dropdown" value={formData.difficulty} onChange={handleInputChange} disabled={loading}>
-											<option value="beginner">beginner</option>
-											<option value="intermediate">intermediate</option>
-										</select>
-									</div>
-
-				{/* DIFFICULTY */}
-				<div className="form-group">
 					<label htmlFor="difficulty">Difficulty</label>
 					<select
 						id="difficulty"
@@ -139,7 +129,6 @@ function QuestionsPage() {
 
 				{/* TITLE */}
 				<div className="form-group">
-									<div className="form-group">
 					<label htmlFor="title">Title</label>
 					<input
 						type="text"
@@ -240,3 +229,4 @@ function QuestionsPage() {
 }
 
 export default QuestionsPage;
+

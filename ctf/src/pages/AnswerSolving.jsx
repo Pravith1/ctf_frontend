@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import CTFHeader from '../components/layout/CTFHeader';
 import { useAuth } from '../context/AuthContext';
-import { submitAnswer, fetchQuestionDetails, checkQuestionSolved, fetchLeaderboard } from '../api';
+import { submitAnswer, fetchQuestionDetails, checkQuestionSolved, fetchLeaderboard, fetchLeaderboardByDifficulty } from '../api';
 import { connectLeaderboardSocket, onLeaderboardUpdate, disconnectLeaderboardSocket } from '../leaderboardSocket';
 
 
@@ -78,24 +78,34 @@ export default function AnswerSolving() {
     connectLeaderboardSocket(() => {}, { auth: { token } });
 
     const unsub = onLeaderboardUpdate((payload) => {
-      const list = payload?.top10 || payload?.data || payload || [];
+      // If payload has difficulty and we have a challenge difficulty, only update matching difficulty
+      if (payload?.difficulty && challengeConfig?.difficulty && payload.difficulty !== challengeConfig.difficulty) return;
+
+      const list = payload?.data || payload?.top10 || payload || [];
       const normalized = (Array.isArray(list) ? list : []).slice(0, 10).map((p, idx) => ({
         rank: p.rank ?? idx + 1,
-        name: p.username || p.name || p.handle || 'unknown',
-        points: p.points ?? p.score ?? 0
+        username: p.team_name || p.username || p.name || p.handle || 'unknown',
+        points: p.points ?? p.point ?? p.score ?? 0,
+        verified: p.verified || false
       }));
       setTop10(normalized);
     });
 
-    // fetch initial leaderboard once
+    // fetch initial leaderboard for the challenge difficulty if available
     (async () => {
       try {
-        const res = await fetchLeaderboard();
-        const list = res?.top10 || res?.data || res || [];
+        let res;
+        if (challengeConfig?.difficulty) {
+          res = await fetchLeaderboardByDifficulty(challengeConfig.difficulty);
+        } else {
+          res = await fetchLeaderboard();
+        }
+        const list = res?.data || res?.top10 || res || [];
         const normalized = (Array.isArray(list) ? list : []).slice(0, 10).map((p, idx) => ({
           rank: p.rank ?? idx + 1,
-          name: p.username || p.name || p.handle || 'unknown',
-          points: p.points ?? p.score ?? 0
+          username: p.team_name || p.username || p.name || p.handle || 'unknown',
+          points: p.points ?? p.point ?? p.score ?? 0,
+          verified: p.verified || false
         }));
         setTop10(normalized);
       } catch (err) {
@@ -107,7 +117,7 @@ export default function AnswerSolving() {
       if (typeof unsub === 'function') unsub();
       // optional: disconnectLeaderboardSocket(); // keep connection for other pages
     };
-  }, []);
+  }, [challengeConfig?.difficulty]);
 
   const handleSubmit = async () => {
     if (isSolved) {
@@ -490,7 +500,7 @@ export default function AnswerSolving() {
               gap: '12px'
             }}>
               {top10.map((player) => (
-                <div key={player.rank} style={{
+                <div key={player.team_name} style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
@@ -498,8 +508,8 @@ export default function AnswerSolving() {
                   fontSize: '14px'
                 }}>
                   <span style={{ fontWeight: '600' }}>{player.rank}</span>
-                  <span>{player.name}</span>
-                  <span style={{ marginLeft: 'auto', color: '#9ca3af' }}>⏱</span>
+                  <span style={{ marginLeft: '8px' }}>{player.username}</span>
+                  <span style={{ marginLeft: 'auto', color: '#9ca3af', fontWeight: 600 }}>{player.points}</span>
                 </div>
               ))}
             </div>

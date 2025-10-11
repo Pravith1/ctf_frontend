@@ -10,7 +10,7 @@ function EditQuestion({ category, question, onBack }) {
     description: question?.description || '',
     answer: question?.answer || '',
     points: question?.points || question?.point || '',
-    difficulty: question?.difficulty || 'medium',
+    difficulty: question?.difficulty || 'beginner',
     year: question?.year || ''
   });
 
@@ -161,6 +161,14 @@ function EditQuestion({ category, question, onBack }) {
           <label htmlFor="points">Points</label>
           <input type="text" id="points" name="points" className="input"
             value={formData.points} onChange={handleInputChange} placeholder="Enter points" required />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="difficulty">Difficulty</label>
+          <select id="difficulty" name="difficulty" className="dropdown" value={formData.difficulty} onChange={handleInputChange} required>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+          </select>
         </div>
 
         <div className="form-group">
