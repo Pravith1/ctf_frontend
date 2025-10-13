@@ -4,6 +4,7 @@ import CTFHeader from '../components/layout/CTFHeader';
 import {
   connectLeaderboardSocket,
   onLeaderboardUpdate,
+  onNewSolve,
   disconnectLeaderboardSocket
 } from '../leaderboardSocket';
 import { fetchLeaderboard, fetchLeaderboardByDifficulty } from '../api';
@@ -13,66 +14,66 @@ export default function Scoreboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log('🔌 Leaderboard: Connecting websocket with token:', token ? 'present' : 'missing');
-    
-    // connect and subscribe
-    connectLeaderboardSocket(() => {
-      console.log('✅ Leaderboard: Socket connected successfully');
-    }, { auth: { token } });
+    console.log('🟦 Leaderboard: Setting up websocket subscription');
+    connectLeaderboardSocket(() => {}, { auth: { token } });
 
-    const difficulty = 'beginner';
-    
     const unsub = onLeaderboardUpdate((payload) => {
-      console.log('📥 Leaderboard: Received websocket update:', payload);
-      
-      // payload normalized: { difficulty, data, timestamp }
-      // Only filter by difficulty if payload includes it, otherwise accept all updates
-      if (payload?.difficulty && payload.difficulty !== difficulty) {
-        console.log(`⏭️ Leaderboard: Skipping ${payload.difficulty} update (expecting ${difficulty})`);
-        return;
-      }
-      
+      console.log('🟦 Leaderboard callback received:', payload);
       const list = payload?.data || payload?.top10 || payload || [];
-      console.log('📊 Leaderboard: Processing list with', list.length, 'entries');
-      
-      const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
+      console.log('🟦 Leaderboard: Extracted list length:', Array.isArray(list) ? list.length : 'not-array');
+      const normalized = (Array.isArray(list) ? list : []).map((p, idx) => ({
         rank: p.rank ?? idx + 1,
-        username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
+        username: p.team_name || p.username || p.name || p.handle || 'unknown',
         points: p.points ?? p.point ?? p.score ?? 0,
         verified: p.verified || false
       }));
-      
-      console.log('✅ Leaderboard: Setting', normalized.length, 'users');
+      console.log('🟦 Leaderboard: Setting state with', normalized.length, 'entries');
       setTop10(normalized);
     });
 
-    // fetch initial leaderboard once
-    (async () => {
+    // Also listen to new_solve events and refresh leaderboard
+    const unsubSolve = onNewSolve(async (payload) => {
+      console.log('🟦 Leaderboard: New solve detected, refreshing leaderboard');
       try {
-        console.log('🔄 Leaderboard: Fetching initial data for difficulty:', difficulty);
-        const res = await fetchLeaderboardByDifficulty(difficulty);
-        console.log('📥 Leaderboard: Initial fetch response:', res);
-        
-        const list = res?.data || res?.leaderboard || res || [];
-        console.log('📊 Leaderboard: Initial list has', list.length, 'entries');
-        
-        const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
+        const res = await fetchLeaderboardByDifficulty('beginner');
+        const list = res?.data || res?.top10 || res || [];
+        const normalized = (Array.isArray(list) ? list : []).map((p, idx) => ({
           rank: p.rank ?? idx + 1,
-          username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
+          username: p.team_name || p.username || p.name || p.handle || 'unknown',
           points: p.points ?? p.point ?? p.score ?? 0,
           verified: p.verified || false
         }));
-        
-        console.log('✅ Leaderboard: Initial data set with', normalized.length, 'users');
+        console.log('🟦 Leaderboard: Updated after new solve with', normalized.length, 'entries');
         setTop10(normalized);
       } catch (err) {
-        console.error('❌ Leaderboard: Failed to fetch initial leaderboard', err);
+        console.warn('Failed to refresh leaderboard after new solve', err);
+      }
+    });
+
+    // fetch initial leaderboard
+    (async () => {
+      try {
+        console.log('🟦 Leaderboard: Fetching initial data');
+        const res = await fetchLeaderboardByDifficulty('beginner');
+        console.log('🟦 Leaderboard: Initial fetch result:', res);
+        const list = res?.data || res?.top10 || res || [];
+        const normalized = (Array.isArray(list) ? list : []).map((p, idx) => ({
+          rank: p.rank ?? idx + 1,
+          username: p.team_name || p.username || p.name || p.handle || 'unknown',
+          points: p.points ?? p.point ?? p.score ?? 0,
+          verified: p.verified || false
+        }));
+        console.log('🟦 Leaderboard: Initial state set with', normalized.length, 'entries');
+        setTop10(normalized);
+      } catch (err) {
+        console.warn('Failed to fetch initial leaderboard', err);
       }
     })();
 
     return () => {
-      // unsubscribe only; keep socket for other pages if needed
+      console.log('🟦 Leaderboard: Cleaning up websocket subscription');
       if (typeof unsub === 'function') unsub();
+      if (typeof unsubSolve === 'function') unsubSolve();
     };
   }, []);
 
