@@ -13,40 +13,60 @@ export default function Scoreboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('🔌 Leaderboard: Connecting websocket with token:', token ? 'present' : 'missing');
+    
     // connect and subscribe
-    connectLeaderboardSocket(() => {}, { auth: { token } });
+    connectLeaderboardSocket(() => {
+      console.log('✅ Leaderboard: Socket connected successfully');
+    }, { auth: { token } });
 
     const difficulty = 'beginner';
     
     const unsub = onLeaderboardUpdate((payload) => {
+      console.log('📥 Leaderboard: Received websocket update:', payload);
+      
       // payload normalized: { difficulty, data, timestamp }
       // Only filter by difficulty if payload includes it, otherwise accept all updates
-      if (payload?.difficulty && payload.difficulty !== difficulty) return;
+      if (payload?.difficulty && payload.difficulty !== difficulty) {
+        console.log(`⏭️ Leaderboard: Skipping ${payload.difficulty} update (expecting ${difficulty})`);
+        return;
+      }
       
       const list = payload?.data || payload?.top10 || payload || [];
+      console.log('📊 Leaderboard: Processing list with', list.length, 'entries');
+      
       const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
         rank: p.rank ?? idx + 1,
         username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
         points: p.points ?? p.point ?? p.score ?? 0,
         verified: p.verified || false
       }));
+      
+      console.log('✅ Leaderboard: Setting', normalized.length, 'users');
       setTop10(normalized);
     });
 
     // fetch initial leaderboard once
     (async () => {
       try {
+        console.log('🔄 Leaderboard: Fetching initial data for difficulty:', difficulty);
         const res = await fetchLeaderboardByDifficulty(difficulty);
+        console.log('📥 Leaderboard: Initial fetch response:', res);
+        
         const list = res?.data || res?.leaderboard || res || [];
+        console.log('📊 Leaderboard: Initial list has', list.length, 'entries');
+        
         const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
           rank: p.rank ?? idx + 1,
           username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
           points: p.points ?? p.point ?? p.score ?? 0,
           verified: p.verified || false
         }));
+        
+        console.log('✅ Leaderboard: Initial data set with', normalized.length, 'users');
         setTop10(normalized);
       } catch (err) {
-        console.warn('Failed to fetch initial leaderboard', err);
+        console.error('❌ Leaderboard: Failed to fetch initial leaderboard', err);
       }
     })();
 

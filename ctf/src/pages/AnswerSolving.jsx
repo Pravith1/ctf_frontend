@@ -153,12 +153,18 @@ export default function AnswerSolving() {
           setIsSolved(true); // Mark as solved
           // fetch latest leaderboard after a correct submission to get immediate update
           try {
-            const lb = await fetchLeaderboard();
-            const list = lb?.top10 || lb?.data || lb || [];
+            let lb;
+            if (challengeConfig?.difficulty) {
+              lb = await fetchLeaderboardByDifficulty(challengeConfig.difficulty);
+            } else {
+              lb = await fetchLeaderboard();
+            }
+            const list = lb?.data || lb?.top10 || lb || [];
             const normalized = (Array.isArray(list) ? list : []).slice(0, 10).map((p, idx) => ({
               rank: p.rank ?? idx + 1,
-              name: p.username || p.name || p.handle || 'unknown',
-              points: p.points ?? p.score ?? 0
+              username: p.team_name || p.username || p.name || p.handle || 'unknown',
+              points: p.points ?? p.point ?? p.score ?? 0,
+              verified: p.verified || false
             }));
             setTop10(normalized);
           } catch (err) {
