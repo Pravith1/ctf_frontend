@@ -3,6 +3,7 @@ import { createCategoryAdmin } from '../../api.js';
 
 function CategoriesPage({ refreshData }) {
 	const [categoryName, setCategoryName] = useState('');
+	const [difficulty, setDifficulty] = useState('beginner');
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState('');
 	const [error, setError] = useState('');
@@ -19,7 +20,10 @@ function CategoriesPage({ refreshData }) {
 
 		try {
 			setLoading(true);
-			const res = await createCategoryAdmin({ name: categoryName.trim() });
+			const res = await createCategoryAdmin({ 
+				name: categoryName.trim(),
+				difficulty: difficulty
+			});
 			
 
 		if (
@@ -28,6 +32,9 @@ function CategoriesPage({ refreshData }) {
 			res?.success
 		) {
 			setStatus('Category created successfully!');
+			setCategoryName('');
+			setDifficulty('beginner');
+			if (refreshData) refreshData();
 		} else {
 			setError(res?.data?.message || 'Cannot create category');
 		}
@@ -59,6 +66,22 @@ function CategoriesPage({ refreshData }) {
 						placeholder="Enter category name"
 						disabled={loading}
 					/>
+				</div>
+
+				{/* DIFFICULTY SELECT */}
+				<div className="form-group">
+					<label htmlFor="difficulty">Difficulty</label>
+					<select
+						id="difficulty"
+						name="difficulty"
+						className="dropdown"
+						value={difficulty}
+						onChange={(e) => setDifficulty(e.target.value)}
+						disabled={loading}
+					>
+						<option value="beginner">Beginner</option>
+						<option value="intermediate">Intermediate</option>
+					</select>
 				</div>
 
 				<button type="submit" className="btn-primary" disabled={loading}>
