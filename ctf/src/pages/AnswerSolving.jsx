@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import CTFHeader from '../components/layout/CTFHeader';
 import { useAuth } from '../context/AuthContext';
 import { submitAnswer, fetchQuestionDetails, checkQuestionSolved, fetchLeaderboard, fetchLeaderboardByDifficulty } from '../api';

@@ -3,12 +3,16 @@ import { updateCategoryAdmin } from '../../api.js';
 
 function EditCategory({ category, onBack }) {
   const [categoryName, setCategoryName] = useState(category.name);
+  const [difficulty, setDifficulty] = useState(category.difficulty || 'beginner');
   const [status, setStatus] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateCategoryAdmin(category._id, { name: categoryName });
+      await updateCategoryAdmin(category._id, { 
+        name: categoryName,
+        difficulty: difficulty
+      });
       setStatus('Category updated successfully!');
       setTimeout(() => {
         setStatus('');
@@ -39,6 +43,21 @@ function EditCategory({ category, onBack }) {
             placeholder="Enter category name"
             required
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="difficulty">Difficulty</label>
+          <select
+            id="difficulty"
+            name="difficulty"
+            className="dropdown"
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            required
+          >
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+          </select>
         </div>
 
         <button type="submit" className="btn-primary">

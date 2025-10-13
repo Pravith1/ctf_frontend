@@ -17,6 +17,22 @@ export default function Scoreboard() {
     connectLeaderboardSocket(() => {}, { auth: { token } });
 
     const difficulty = 'beginner';
+    
+    const unsub = onLeaderboardUpdate((payload) => {
+      // payload normalized: { difficulty, data, timestamp }
+      // Only filter by difficulty if payload includes it, otherwise accept all updates
+      if (payload?.difficulty && payload.difficulty !== difficulty) return;
+      
+      const list = payload?.data || payload?.top10 || payload || [];
+      const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
+        rank: p.rank ?? idx + 1,
+        username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
+        points: p.points ?? p.point ?? p.score ?? 0,
+        verified: p.verified || false
+      }));
+      setTop10(normalized);
+    });
+
     // fetch initial leaderboard once
     (async () => {
       try {
@@ -34,23 +50,9 @@ export default function Scoreboard() {
       }
     })();
 
-    const unsubscribe = onLeaderboardUpdate((payload) => {
-      // payload normalized: { difficulty, data, timestamp }
-      // Only filter by difficulty if payload includes it, otherwise accept all updates
-      if (payload.difficulty && payload.difficulty !== 'beginner') return;
-      const list = payload.data || [];
-      const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
-        rank: p.rank ?? idx + 1,
-        username: p.team_name || p.username || p.name || p.user || p.handle || 'unknown',
-        points: p.points ?? p.point ?? p.score ?? 0,
-        verified: p.verified || false
-      }));
-      setTop10(normalized);
-    });
-
     return () => {
       // unsubscribe only; keep socket for other pages if needed
-      if (typeof unsubscribe === 'function') unsubscribe();
+      if (typeof unsub === 'function') unsub();
     };
   }, []);
 
