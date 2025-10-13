@@ -44,7 +44,6 @@ const QuestionCard = memo(({ question, solvedFilter, categoryFilter, onClick }) 
       )}
       <div className="card-header">
         <h3 className="challenge-title">{question.title}</h3>
-        <span className="difficulty-badge">Year {question.year}</span>
       </div>
 
       <div className="card-stats">
@@ -71,9 +70,7 @@ const QuestionCard = memo(({ question, solvedFilter, categoryFilter, onClick }) 
       <div className="card-footer">
         <div className="challenge-meta">
           <span className="category">{question.categoryId?.name || categoryFilter}</span>
-          <span className="separator">·</span>
         </div>
-        <div className="solves">{(question.solved_count || 0).toLocaleString()} solves</div>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ export default function AnswerSolving() {
   const { user } = useAuth();
   const location = useLocation();
   const { id } = useParams();
+  const navigate = useNavigate();
   
   // Get challenge data from navigation state or fetch from backend
   const passedChallenge = location.state?.challenge;
@@ -239,6 +240,37 @@ export default function AnswerSolving() {
           display: 'flex',
           flexDirection: 'column'
         }}>
+          {/* Back Button */}
+          <button
+            onClick={() => navigate('/challenges')}
+            style={{
+              background: 'transparent',
+              border: '1px solid #4b5563',
+              color: '#d1d5db',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
+              alignSelf: 'flex-start'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#374151';
+              e.target.style.borderColor = '#6b7280';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'transparent';
+              e.target.style.borderColor = '#4b5563';
+            }}
+          >
+            ← Back to Challenges
+          </button>
+          
           {/* Header with title, points, and difficulty */}
           <div style={{ 
             display: 'flex', 

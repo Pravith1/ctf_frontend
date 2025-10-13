@@ -36,7 +36,8 @@ export default function Scoreboard() {
 
     const unsubscribe = onLeaderboardUpdate((payload) => {
       // payload normalized: { difficulty, data, timestamp }
-      if (payload.difficulty !== 'beginner') return; // ignore others for this page
+      // Only filter by difficulty if payload includes it, otherwise accept all updates
+      if (payload.difficulty && payload.difficulty !== 'beginner') return;
       const list = payload.data || [];
       const normalized = (Array.isArray(list) ? list : []).slice(0, 50).map((p, idx) => ({
         rank: p.rank ?? idx + 1,
