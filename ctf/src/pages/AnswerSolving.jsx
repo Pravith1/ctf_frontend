@@ -30,7 +30,15 @@ export default function AnswerSolving() {
         
         // Use passed challenge or fetch from backend
         if (passedChallenge) {
-          setChallengeConfig(passedChallenge);
+          
+          // Ensure the passed challenge has the link fields properly mapped
+          const normalizedChallenge = {
+            ...passedChallenge,
+            linkText: passedChallenge.link ? 'link' : passedChallenge.linkText,
+            linkUrl: passedChallenge.link || passedChallenge.linkUrl
+          };
+          
+          setChallengeConfig(normalizedChallenge);
           
           // Check if question is solved
           const solvedResponse = await checkQuestionSolved(passedChallenge._id || id);
@@ -40,7 +48,8 @@ export default function AnswerSolving() {
           const questionResponse = await fetchQuestionDetails(id);
           if (questionResponse.success) {
             const question = questionResponse.data;
-            setChallengeConfig({
+            
+            const configObj = {
               _id: question._id,
               id: question._id,
               title: question.title,
@@ -49,8 +58,12 @@ export default function AnswerSolving() {
               difficulty: question.difficulty,
               category: question.categoryId?.name || 'General',
               solves: question.solved_count || 0,
-              year: question.year
-            });
+              year: question.year,
+              linkText: question.link ? 'link' : null,
+              linkUrl: question.link
+            };
+            
+            setChallengeConfig(configObj);
           }
           
           // Check if question is solved
@@ -392,7 +405,7 @@ export default function AnswerSolving() {
                   value={flagInput}
                   onChange={(e) => !isSolved && setFlagInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !isSolved && handleSubmit()}
-                  placeholder={isSolved ? "You have already solved this question!" : "flag{your_answer_here}"}
+                  placeholder={isSolved ? "You have already solved this question!" : "CyberCtf{your_answer_here}"}
                   disabled={isSolved}
                   style={{
                     flex: 1,

@@ -133,7 +133,10 @@ const ChallengesPage = () => {
           difficulty: question.difficulty,
           category: question.categoryId?.name || categoryFilter,
           year: question.year,
-          solves: question.solved_count || 0
+          solves: question.solved_count || 0,
+          link: question.link,  // Add the missing link field!
+          linkText: question.link ? 'Download File' : null,
+          linkUrl: question.link
         } 
       } 
     });

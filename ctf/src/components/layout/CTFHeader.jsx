@@ -77,24 +77,6 @@ export default function CTFHeader() {
             <span className="brand-text">Cyberctf</span>
           </Link>
           <div className="ctf-social">
-            <a
-              href="https://discord.com"
-              target="_blank"
-              rel="noreferrer"
-              className="social-link"
-              aria-label="Join us on Discord"
-            >
-              <DiscordIcon />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noreferrer"
-              className="social-link"
-              aria-label="Follow us on Twitter"
-            >
-              <TwitterIcon />
-            </a>
           </div>
         </div>
 

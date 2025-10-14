@@ -166,7 +166,7 @@ export default function ArenaLogin() {
 							name="password"
 							value={formData.password}
 							onChange={handleInputChange}
-							placeholder="••••••••"
+							placeholder="Enter your password"
 							className="form-input"
 						/>
 					</div>

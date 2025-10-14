@@ -4,9 +4,6 @@ import axios from 'axios';
 // Default to Render backend if not set
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://ctf-backend-1.onrender.com';
 
-console.log('🌐 Backend URL:', BASE_URL);
-console.log('🔧 Using proxy:', BASE_URL.startsWith('/'));
-
 // Diagnostic function - call window.checkAuth() in console to debug
 window.checkAuth = () => {
   console.group('🔍 Auth Diagnostic Check');
@@ -32,14 +29,6 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    console.group(`📤 ${config.method.toUpperCase()} ${config.url}`);
-    console.log('🔗 URL:', config.baseURL + config.url);
-    console.log('🔑 Auth:', token ? 'Bearer token present' : 'No token');
-    if (config.data) {
-      console.log('📦 Data:', config.data);
-    }
-    console.groupEnd();
     return config;
   },
   (error) => {
@@ -51,10 +40,6 @@ api.interceptors.request.use(
 // Central response handler
 api.interceptors.response.use(
   (res) => {
-    console.group(`📥 Response from ${res.config.url}`);
-    console.log('✅ Status:', res.status);
-    console.log('📦 Data:', res.data);
-    console.groupEnd();
     return res;
   },
   (err) => {
@@ -143,6 +128,9 @@ export const fetchQuestionsByCategory = async (categoryId) => {
 // Get individual question details
 export const fetchQuestionDetails = async (question_id) => {
   const res = await api.post('/submission/question', { question_id });
+  console.log('🔍 Frontend API - Fetched question details:', res.data);
+  console.log('🔗 Link field present:', !!res.data?.data?.link);
+  console.log('🔗 Link value:', res.data?.data?.link);
   return res.data;
 };
 
