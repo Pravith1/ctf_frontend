@@ -21,6 +21,7 @@ export default function AnswerSolving() {
   const [submitResult, setSubmitResult] = useState(null);
   const [isSolved, setIsSolved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showHint, setShowHint] = useState(false);
   
   // Fetch question details and solved status on mount
   useEffect(() => {
@@ -31,11 +32,21 @@ export default function AnswerSolving() {
         // Use passed challenge or fetch from backend
         if (passedChallenge) {
           
+          // TEMPORARILY: Always fetch from backend to see console.log and verify hint data
+          console.log('🔍 AnswerSolving: Also fetching from backend to verify hint data...');
+          try {
+            const questionResponse = await fetchQuestionDetails(passedChallenge._id || id);
+            console.log('🔍 AnswerSolving: Backend response for verification:', questionResponse);
+          } catch (err) {
+            console.log('🔍 AnswerSolving: Backend fetch failed:', err);
+          }
+          
           // Ensure the passed challenge has the link fields properly mapped
           const normalizedChallenge = {
             ...passedChallenge,
-            linkText: passedChallenge.link ? 'link' : passedChallenge.linkText,
-            linkUrl: passedChallenge.link || passedChallenge.linkUrl
+            linkText: passedChallenge.link ? 'Download File' : passedChallenge.linkText,
+            linkUrl: passedChallenge.link || passedChallenge.linkUrl,
+            hint: passedChallenge.hint || null
           };
           
           setChallengeConfig(normalizedChallenge);
@@ -59,8 +70,9 @@ export default function AnswerSolving() {
               category: question.categoryId?.name || 'General',
               solves: question.solved_count || 0,
               year: question.year,
-              linkText: question.link ? 'link' : null,
-              linkUrl: question.link
+              linkText: question.link ? 'Download File' : null,
+              linkUrl: question.link,
+              hint: question.hint || null
             };
             
             setChallengeConfig(configObj);
@@ -71,7 +83,6 @@ export default function AnswerSolving() {
           setIsSolved(solvedResponse.data?.isSolved || false);
         }
       } catch (error) {
-        console.error('Failed to load question:', error);
         setSubmitResult({ 
           success: false, 
           message: 'Failed to load question details' 
@@ -123,7 +134,7 @@ export default function AnswerSolving() {
         }));
         setTop10(normalized);
       } catch (err) {
-        console.warn('Failed to fetch initial leaderboard', err);
+        // Silent fail for initial leaderboard fetch
       }
     })();
 
@@ -181,7 +192,7 @@ export default function AnswerSolving() {
             }));
             setTop10(normalized);
           } catch (err) {
-            console.warn('Failed to refresh leaderboard after submission', err);
+            // Silent fail for leaderboard refresh after submission
           }
         }
       } else {
@@ -353,6 +364,62 @@ export default function AnswerSolving() {
               }}>
                 🔗 {challengeConfig.linkText}
               </a>
+            )}
+
+            {/* Hint Button - Only show for year 1 and 2 */}
+            {challengeConfig.hint && challengeConfig.year && (challengeConfig.year === 1 || challengeConfig.year === 2) && (
+              <button
+                onClick={() => setShowHint(!showHint)}
+                style={{
+                  background: showHint ? '#f59e0b' : '#10b981',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '16px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.opacity = '0.8';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.opacity = '1';
+                }}
+              >
+                💡 {showHint ? 'Hide Hint' : 'Show Hint'}
+              </button>
+            )}
+
+            {/* Hint Modal/Display */}
+            {showHint && challengeConfig.hint && (
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1px solid #10b981',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+                color: '#10b981'
+              }}>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600', 
+                  marginBottom: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  💡 Hint
+                </div>
+                <div style={{ fontSize: '14px', lineHeight: '1.5' }}>
+                  {challengeConfig.hint}
+                </div>
+              </div>
             )}
 
             {challengeConfig.additionalInfo && (

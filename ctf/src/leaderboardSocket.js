@@ -9,9 +9,6 @@ const userRankListeners = new Set();
 const newSolveListeners = new Set();
 
 const handleLeaderboardEvent = (payload) => {
-  console.log('📨 handleLeaderboardEvent called with payload:', payload);
-  console.log('📊 Current listeners count:', leaderboardListeners.size);
-  
   // payload shape from backend: { leaderboard, difficulty, timestamp, updated_user }
   const normalized = {
     difficulty: payload?.difficulty || null,
@@ -20,42 +17,32 @@ const handleLeaderboardEvent = (payload) => {
     updated_user: payload?.updated_user || null
   };
   
-  console.log('📦 Normalized payload:', { 
-    difficulty: normalized.difficulty, 
-    dataLength: Array.isArray(normalized.data) ? normalized.data.length : 'not-array',
-    timestamp: normalized.timestamp 
-  });
-  
   leaderboardListeners.forEach(cb => {
     try { 
-      console.log('🔔 Calling listener callback');
       cb(normalized); 
     } catch (e) { 
-      console.error('❌ leaderboard listener err', e); 
+      // Silent fail for leaderboard listeners
     }
   });
 };
 
 const handleUserRank = (payload) => {
   userRankListeners.forEach(cb => {
-    try { cb(payload); } catch (e) { console.error('user rank listener err', e); }
+    try { cb(payload); } catch (e) { /* Silent fail */ }
   });
 };
 
 const handleNewSolve = (payload) => {
   newSolveListeners.forEach(cb => {
-    try { cb(payload); } catch (e) { console.error('new solve listener err', e); }
+    try { cb(payload); } catch (e) { /* Silent fail */ }
   });
 };
 
 export const connectLeaderboardSocket = (onConnect = () => {}, options = {}) => {
   if (socket && socket.connected) {
-    console.log('🔄 Reusing existing socket connection:', socket.id);
     onConnect(socket);
     return socket;
   }
-
-  console.log('🆕 Creating new socket connection to:', BACKEND_URL);
 
   // Allow auth token from options or fallback to localStorage
   const token = options?.auth?.token || localStorage.getItem('token') || null;
@@ -75,46 +62,41 @@ export const connectLeaderboardSocket = (onConnect = () => {}, options = {}) => 
 
   socket.on('connect', () => {
     onConnect(socket);
-    console.log('Connected to leaderboard socket:', socket.id);
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('Leaderboard socket disconnected:', reason);
+    // Socket disconnected
   });
 
   socket.on('connect_error', (err) => {
-    console.warn('Leaderboard socket connect_error:', err && err.message ? err.message : err);
+    // Connection error
   });
 
   socket.on('reconnect_attempt', (attempt) => {
-    console.log('Leaderboard socket reconnect attempt', attempt);
+    // Reconnection attempt
   });
 
   socket.on('reconnect', (attempt) => {
-    console.log('Leaderboard socket reconnected after', attempt, 'attempt(s)');
+    // Reconnected successfully
   });
 
   socket.on('reconnect_failed', () => {
-    console.error('Leaderboard socket failed to reconnect');
+    // Failed to reconnect
   });
 
   // Backend emits difficulty-specific events
   socket.on('leaderboard_update_beginner', (payload) => {
-    console.log('🟢 Received leaderboard_update_beginner event:', payload);
     handleLeaderboardEvent(payload);
   });
   socket.on('leaderboard_update_intermediate', (payload) => {
-    console.log('🟡 Received leaderboard_update_intermediate event:', payload);
     handleLeaderboardEvent(payload);
   });
 
   // Other events
   socket.on('user_rank_change', (payload) => {
-    console.log('🔵 Received user_rank_change event:', payload);
     handleUserRank(payload);
   });
   socket.on('new_solve', (payload) => {
-    console.log('🟣 Received new_solve event:', payload);
     handleNewSolve(payload);
   });
 

@@ -4,16 +4,6 @@ import axios from 'axios';
 // Default to Render backend if not set
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://ctf-backend-1.onrender.com';
 
-// Diagnostic function - call window.checkAuth() in console to debug
-window.checkAuth = () => {
-  console.group('🔍 Auth Diagnostic Check');
-  console.log('🔑 Token present:', !!localStorage.getItem('token'));
-  console.log('💾 User data:', localStorage.getItem('user'));
-  console.log('🌐 Backend URL:', BASE_URL);
-  console.log('📍 Current path:', window.location.pathname);
-  console.groupEnd();
-};
-
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true, // Keep for CORS compatibility
@@ -32,7 +22,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('❌ Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -43,11 +32,6 @@ api.interceptors.response.use(
     return res;
   },
   (err) => {
-    console.group(`❌ Error from ${err.config?.url || 'unknown'}`);
-    console.error('Status:', err.response?.status);
-    console.error('Message:', err.response?.data?.message || err.response?.data?.error);
-    console.error('Data:', err.response?.data);
-    
     // Handle 401 Unauthorized errors
     if (err.response?.status === 401) {
       const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Unauthorized';
@@ -55,11 +39,7 @@ api.interceptors.response.use(
       // Don't redirect if it's a login/signup request failing (wrong credentials)
       const isAuthEndpoint = err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/signup');
       
-      if (isAuthEndpoint) {
-        console.error('⚠️ Authentication failed - check credentials');
-      } else {
-        console.error('⚠️ Token is invalid or expired - redirecting to login');
-        
+      if (!isAuthEndpoint) {
         const currentPath = window.location.pathname;
         // Only redirect to login if not already on login page
         if (currentPath !== '/' && currentPath !== '/login') {
@@ -70,7 +50,6 @@ api.interceptors.response.use(
       }
     }
     
-    console.groupEnd();
     return Promise.reject(err);
   }
 );
@@ -129,8 +108,6 @@ export const fetchQuestionsByCategory = async (categoryId) => {
 export const fetchQuestionDetails = async (question_id) => {
   const res = await api.post('/submission/question', { question_id });
   console.log('🔍 Frontend API - Fetched question details:', res.data);
-  console.log('🔗 Link field present:', !!res.data?.data?.link);
-  console.log('🔗 Link value:', res.data?.data?.link);
   return res.data;
 };
 

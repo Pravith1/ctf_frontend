@@ -26,7 +26,6 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
         })
         .catch((err) => {
           if (!mounted) return;
-          console.error('Admin check failed:', err.response?.data || err.message);
           setIsAdmin(false);
           setAdminChecked(true);
         })

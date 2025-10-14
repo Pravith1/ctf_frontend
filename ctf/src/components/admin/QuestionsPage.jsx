@@ -11,7 +11,8 @@ function QuestionsPage() {
 		answer: '',
 		point: '',
 		year: new Date().getFullYear(),
-		difficulty: 'beginner'
+		difficulty: 'beginner',
+		hint: ''
 	});
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState('');
@@ -26,7 +27,6 @@ function QuestionsPage() {
 				setFormData(prev => ({ ...prev, category: res.data[0]?.name || '' }));
 			}
 		} catch (err) {
-			console.error(err);
 			setError('Failed to load categories');
 		}
 	};
@@ -45,9 +45,9 @@ function QuestionsPage() {
 		setStatus('');
 		setError('');
 
-		const { category, title, description, answer, point, year, difficulty } = formData;
+		const { category, title, description, answer, point, year, difficulty, hint } = formData;
 		if (!category || !title || !description || !answer || !point || !year || !difficulty) {
-			setError('All fields except link are required');
+			setError('All fields except link and hint are required');
 			return;
 		}
 
@@ -59,7 +59,8 @@ function QuestionsPage() {
 			point: Number(point),
 			link: formData.link || '',
 			year: Number(year),
-			difficulty: formData.difficulty
+			difficulty: formData.difficulty,
+			hint: formData.hint || ''
 		};
 
 		try {
@@ -75,13 +76,13 @@ function QuestionsPage() {
 					answer: '',
 					point: '',
 					year: new Date().getFullYear(),
-					difficulty: 'beginner'
+					difficulty: 'beginner',
+					hint: ''
 				});
 			} else {
 				setError(res?.data?.message || 'Failed to create question');
 			}
 		} catch (err) {
-			console.error(err);
 			setError(err.response?.data?.message || 'Failed to create question');
 		} finally {
 			setLoading(false);
@@ -168,6 +169,21 @@ function QuestionsPage() {
 						onChange={handleInputChange}
 						placeholder="Enter question description"
 						rows="4"
+						disabled={loading}
+					/>
+				</div>
+
+				{/* HINT */}
+				<div className="form-group">
+					<label htmlFor="hint">Hint (Optional)</label>
+					<textarea
+						id="hint"
+						name="hint"
+						className="textarea"
+						value={formData.hint}
+						onChange={handleInputChange}
+						placeholder="Enter hint for the question"
+						rows="2"
 						disabled={loading}
 					/>
 				</div>

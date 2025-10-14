@@ -11,7 +11,8 @@ function EditQuestion({ category, question, onBack }) {
     answer: question?.answer || '',
     points: question?.points || question?.point || '',
     difficulty: question?.difficulty || 'beginner',
-    year: question?.year || ''
+    year: question?.year || '',
+    hint: question?.hint || ''
   });
 
   const [status, setStatus] = useState('');
@@ -45,15 +46,15 @@ function EditQuestion({ category, question, onBack }) {
               answer: q.answer || '',
               points: q.points || q.point || '',
               difficulty: q.difficulty || q.level || 'medium',
-              year: q.year || ''
+              year: q.year || '',
+              hint: q.hint || ''
             });
           } catch (err) {
             // if fetchQuestionDetails fails, fall back to provided question
-            console.warn('Could not fetch full question details, using provided data', err);
           }
         }
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
+        // Failed to fetch categories
       }
     };
 
@@ -85,7 +86,8 @@ function EditQuestion({ category, question, onBack }) {
         difficulty: formData.difficulty || 'medium',
         answer: formData.answer || '',
         point: Number(formData.points || 0),
-        year: Number(formData.year || 0)
+        year: Number(formData.year || 0),
+        hint: formData.hint || ''
       };
 
       const res = await updateQuestionAdmin(question._id || question.question_id || question.id, payload);
@@ -100,7 +102,6 @@ function EditQuestion({ category, question, onBack }) {
         setError(res.message || 'Failed to update question');
       }
     } catch (err) {
-      console.error(err);
       setError(err.response?.data?.message || 'Failed to update question');
     } finally {
       setLoading(false);
@@ -149,6 +150,13 @@ function EditQuestion({ category, question, onBack }) {
           <textarea id="description" name="description" className="textarea"
             value={formData.description} onChange={handleInputChange} placeholder="Enter question description"
             rows="4" required />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="hint">Hint (Optional)</label>
+          <textarea id="hint" name="hint" className="textarea"
+            value={formData.hint} onChange={handleInputChange} placeholder="Enter hint for the question"
+            rows="2" />
         </div>
 
         <div className="form-group">

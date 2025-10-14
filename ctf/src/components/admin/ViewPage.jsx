@@ -39,7 +39,7 @@ function ViewPage() {
 				});
 				setQuestionsByCategory(grouped);
 			} catch (err) {
-				console.error('Error fetching data:', err);
+				// Silent fail for data fetching
 			} finally {
 				setLoading(false);
 			}
@@ -65,7 +65,7 @@ function ViewPage() {
 			});
 			setQuestionsByCategory(grouped);
 		} catch (err) {
-			console.error(err);
+			// Silent fail for refresh data
 		} finally {
 			setLoading(false);
 		}

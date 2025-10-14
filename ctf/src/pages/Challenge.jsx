@@ -52,7 +52,6 @@ const ChallengesPage = () => {
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load categories. Please login again.');
-      console.error('Category load error:', err);
     } finally {
       setLoading(false);
     }
@@ -95,7 +94,6 @@ const ChallengesPage = () => {
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load questions');
       setQuestions([]);
-      console.error('Questions load error:', err);
     } finally {
       setLoading(false);
     }
@@ -136,7 +134,8 @@ const ChallengesPage = () => {
           solves: question.solved_count || 0,
           link: question.link,  // Add the missing link field!
           linkText: question.link ? 'Download File' : null,
-          linkUrl: question.link
+          linkUrl: question.link,
+          hint: question.hint || null  // Add hint field
         } 
       } 
     });

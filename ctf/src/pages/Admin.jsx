@@ -35,7 +35,6 @@ function Admin() {
 				// user is admin, fetch data
 				await fetchData();
 			} catch (err) {
-				console.error('Admin verification failed:', err);
 				navigate('/login');
 			} finally {
 				if (mounted) setLoading(false);
@@ -55,14 +54,11 @@ function Admin() {
 			getQuestionsAdmin()
 		]);
 
-		console.log('Fetched categories:', cats);
-		console.log('Fetched questions:', ques);
-
 		// ✅ Extract .data property safely
 		setCategories(Array.isArray(cats?.data) ? cats.data : []);
 		setQuestions(Array.isArray(ques?.data) ? ques.data : []);
 	} catch (err) {
-		console.error('Failed to load admin data:', err);
+		// Silent fail for admin data loading
 	} finally {
 		setLoading(false);
 	}

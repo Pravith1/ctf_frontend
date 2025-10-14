@@ -41,7 +41,6 @@ function CategoriesPage({ refreshData }) {
 
 
 		} catch (err) {
-			console.error(err);
 			setError(err.response?.data?.message || 'Failed to create category');
 		} finally {
 			setLoading(false);
