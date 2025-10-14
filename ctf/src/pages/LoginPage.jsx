@@ -12,8 +12,7 @@ export default function ArenaLogin() {
 		email: '',
 		password: '',
 		confirmPassword: '',
-		year: '',
-		difficulty: 'beginner' // Default difficulty
+		year: ''
 	});
 	const [isHovered, setIsHovered] = useState(false);
 	const [error, setError] = useState('');
@@ -68,8 +67,7 @@ export default function ArenaLogin() {
 				email: formData.email,
 				team_name: formData.team_name,
 				password: formData.password,
-				year: parseInt(formData.year),
-				difficulty: formData.difficulty // Include difficulty field
+				year: parseInt(formData.year)
 			});
 
 			if (result.success) {
@@ -82,7 +80,7 @@ export default function ArenaLogin() {
 
 	const toggleMode = () => {
 		setIsLogin(!isLogin);
-		setFormData({ team_name: '', email: '', password: '', confirmPassword: '', year: '', difficulty: 'beginner' });
+		setFormData({ team_name: '', email: '', password: '', confirmPassword: '', year: ''});
 		setError('');
 	};
 
@@ -155,20 +153,6 @@ export default function ArenaLogin() {
 									<option value="2">2nd Year</option>
 									<option value="3">3rd Year</option>
 									<option value="4">4th Year</option>
-								</select>
-							</div>
-
-							<div className="form-group">
-								<label className="form-label">Difficulty Level</label>
-								<select
-									name="difficulty"
-									value={formData.difficulty}
-									onChange={handleInputChange}
-									className="form-input"
-									style={{ cursor: 'pointer' }}
-								>
-									<option value="beginner">Beginner</option>
-									<option value="intermediate">Intermediate</option>
 								</select>
 							</div>
 						</>
