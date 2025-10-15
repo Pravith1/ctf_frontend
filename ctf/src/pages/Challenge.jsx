@@ -120,6 +120,14 @@ const ChallengesPage = () => {
   }, []);
 
   const handleChallengeClick = useCallback((question) => {
+    console.log('🔍 Challenge: Navigating with question data:', {
+      title: question.title,
+      link: question.link,
+      hint: question.hint,
+      questionKeys: Object.keys(question),
+      fullQuestion: question
+    });
+    
     navigate(`/challenge/${question._id}`, { 
       state: { 
         challenge: {

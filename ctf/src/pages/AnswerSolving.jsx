@@ -34,20 +34,40 @@ export default function AnswerSolving() {
           
           // TEMPORARILY: Always fetch from backend to see console.log and verify hint data
           console.log('🔍 AnswerSolving: Also fetching from backend to verify hint data...');
+          let backendData = null;
           try {
             const questionResponse = await fetchQuestionDetails(passedChallenge._id || id);
             console.log('🔍 AnswerSolving: Backend response for verification:', questionResponse);
+            console.log('🔍 AnswerSolving: Backend response structure:', {
+              success: questionResponse.success,
+              data: questionResponse.data,
+              dataKeys: questionResponse.data ? Object.keys(questionResponse.data) : 'no data',
+              linkField: questionResponse.data?.link,
+              linkType: typeof questionResponse.data?.link
+            });
+            backendData = questionResponse.data;
           } catch (err) {
             console.log('🔍 AnswerSolving: Backend fetch failed:', err);
           }
           
           // Ensure the passed challenge has the link fields properly mapped
+          // Use backend data for link if available, fallback to navigation data
           const normalizedChallenge = {
             ...passedChallenge,
-            linkText: passedChallenge.link ? 'Download File' : passedChallenge.linkText,
-            linkUrl: passedChallenge.link || passedChallenge.linkUrl,
-            hint: passedChallenge.hint || null
+            linkText: (backendData?.link || passedChallenge.link) ? 'Download File' : null,
+            linkUrl: backendData?.link || passedChallenge.link || null,
+            hint: backendData?.hint || passedChallenge.hint || null
           };
+          
+          console.log('🔍 AnswerSolving: Normalized challenge data:', {
+            originalLink: passedChallenge.link,
+            backendLink: backendData?.link,
+            finalLinkText: normalizedChallenge.linkText,
+            finalLinkUrl: normalizedChallenge.linkUrl,
+            hint: normalizedChallenge.hint,
+            passedChallengeKeys: Object.keys(passedChallenge),
+            passedChallengeData: passedChallenge
+          });
           
           setChallengeConfig(normalizedChallenge);
           
@@ -57,8 +77,18 @@ export default function AnswerSolving() {
         } else if (id) {
           // Fetch question details from backend
           const questionResponse = await fetchQuestionDetails(id);
+          console.log('🔍 AnswerSolving: Direct backend fetch response:', questionResponse);
+          
           if (questionResponse.success) {
             const question = questionResponse.data;
+            console.log('🔍 AnswerSolving: Question data from backend:', {
+              questionKeys: Object.keys(question),
+              link: question.link,
+              linkType: typeof question.link,
+              hint: question.hint,
+              hintType: typeof question.hint,
+              fullQuestion: question
+            });
             
             const configObj = {
               _id: question._id,
@@ -74,6 +104,8 @@ export default function AnswerSolving() {
               linkUrl: question.link,
               hint: question.hint || null
             };
+            
+            console.log('🔍 AnswerSolving: Configured object for backend data:', configObj);
             
             setChallengeConfig(configObj);
           }
@@ -353,6 +385,13 @@ export default function AnswerSolving() {
             }}>
               {challengeConfig.description}
             </p>
+            
+            {/* DEBUG: Link display information */}
+            {console.log('🔍 AnswerSolving: Link display check:', {
+              linkText: challengeConfig.linkText,
+              linkUrl: challengeConfig.linkUrl,
+              willShow: !!(challengeConfig.linkText && challengeConfig.linkUrl)
+            })}
             
             {challengeConfig.linkText && challengeConfig.linkUrl && (
               <a href={challengeConfig.linkUrl} style={{
